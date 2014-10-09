@@ -1,0 +1,14 @@
+#zonesaisie {
+font-size: 108%;
+min-width:48%;
+width:auto;
+height:100%;
+float:left;
+}
+
+#apercu {
+font-size: 108%;
+min-width: 48%;
+height:100%;
+float:right;
+}

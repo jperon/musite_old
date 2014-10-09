@@ -19,8 +19,8 @@ class Site:
     def css(self):
         with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))
         try:
-            plugin = PLUGINS[cherrypy.session['module']].CSS
-        except KeyError:
+            plugin = PLUGINS[cherrypy.session['plugin']].CSS
+        except (AttributeError,KeyError):
             plugin = ''
         return css.substitute(plugin = plugin)
 
@@ -30,20 +30,11 @@ class Site_old:
     @cherrypy.expose
     def GET(self,url='gregorio'):
         if url in MODULES:
-            cherrypy.session['module'] = url
+            cherrypy.session['plugin'] = url
             page = Page(PLUGINS[cherrypy.session['plugin']].ACCUEIL)
             return page.contenu
         elif url == 'css': return self.css
         else: return Page('<p>404 : Il doit y avoir une erreur dans votre adresse…</p>').contenu
-    @cherrypy.expose
-    def POST(self,url='gregorio',texte=''):
-        sortie = PLUGINS[cherrypy.session['plugin']].traiter(texte)
-        os.renames(os.path.join(sortie['dossier'],sortie['fichier']),os.path.join('static','files',cherrypy.session['plugin'],sortie['fichier']))
-        return Page(
-            '<object type="application/pdf" data="/static/files/{0}/{1}" zoom="page" width="100%" height="100%"></object>'.format(
-                cherrypy.session['plugin'],sortie['fichier']
-                )
-            ).contenu
     @property
     def css(self):
         with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))
@@ -53,11 +44,11 @@ class Site_old:
             plugin = ''
         return css.substitute(plugin = plugin)
 
-def presenter(accueillir):
-    return accueillir
-
-def test():
-    return "Coucou !"
+def presenter(accueillir,plugin):
+    def retour(*arguments,**parametres):
+        cherrypy.session['plugin'] = plugin
+        return Page(accueillir(*arguments,**parametres)).contenu
+    return retour
 
 class Page:
     def __init__(self,corps):
@@ -95,9 +86,9 @@ if __name__ == '__main__':
         }
     
     site = Site()
-    setattr(site,'test',cherrypy.expose(presenter(test)))
     for m in PLUGINS.keys():
-        setattr(site,m,cherrypy.expose(presenter(PLUGINS[m].accueillir)))
+        site_config[m] = {'tools.sessions.on':True}
+        setattr(site,m,cherrypy.expose(presenter(PLUGINS[m].accueillir,m)))
     
 #    cherrypy.config.update(server_config)
     cherrypy.quickstart(site, '/', site_config)

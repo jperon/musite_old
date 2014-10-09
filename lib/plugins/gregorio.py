@@ -1,43 +1,22 @@
 import os,shutil
 import subprocess as sp
 import cherrypy
+from string import Template
 
 PWD = os.path.abspath(os.getcwd())
+DOSSIER = os.path.join('lib','plugins','gregorio')
+with open(os.path.join(DOSSIER,'saisie.html')) as f:
+    SAISIE = Template(f.read(-1)).substitute(nom = os.path.splitext(os.path.basename(__file__))[0])
+with open(os.path.join(DOSSIER,'style.css')) as f:
+    CSS = f.read(-1)
 
-ACCUEIL = '''
-<div id="zonesaisie">
-    <form method="post" action="">
-        <textarea name="texte" id="saisie"></textarea>
-        <br>
-        <button type="submit">OK !</button>
-    </form>
-</div>
-<div id="apercu">
-    <object type="image/x.djvu" data="/static/gregorio/LU/LU.djvu" zoom="page" width="100%" height="100%">
-    Vous semblez n'avoir pas le plugin djvu.
-    </object>
-</div>
-'''
-
-CSS = '''
-#zonesaisie {
-font-size: 108%;
-min-width:48%;
-width:auto;
-height:100%;
-float:left;
-}
-
-#apercu {
-font-size: 108%;
-min-width: 48%;
-height:100%;
-float:right;
-}
-'''
-
-def accueillir():
-    return ACCUEIL
+def accueillir(*arguments,**parametres):
+    with open("log",'a') as f:
+        f.write('arguments : {0}\n'.format(str(arguments)))
+        f.write('paramètres : {0}\n'.format(str(parametres)))
+    try:
+        return{'traiter': traiter(parametres['texte'])}[arguments[0]]
+    except KeyError: return SAISIE
 
 def traiter(contenu):
     modele = 'gregorio'
@@ -65,3 +44,16 @@ def traiter(contenu):
     sortie,erreurs = sp.Popen(commande,env=environnement,stdout=sp.PIPE,stderr=sp.PIPE).communicate()
     os.chdir(PWD)
     return {'dossier':destination,'fichier':'partition.pdf'}
+
+
+
+'''
+def POST(self,url='gregorio',texte=''):
+        sortie = PLUGINS[cherrypy.session['plugin']].traiter(texte)
+        os.renames(os.path.join(sortie['dossier'],sortie['fichier']),os.path.join('static','files',cherrypy.session['plugin'],sortie['fichier']))
+        return Page(
+            '<object type="application/pdf" data="/static/files/{0}/{1}" zoom="page" width="100%" height="100%"></object>'.format(
+                cherrypy.session['plugin'],sortie['fichier']
+                )
+            ).contenu
+'''
