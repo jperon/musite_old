@@ -36,6 +36,9 @@ float:right;
 }
 '''
 
+def accueillir():
+    return ACCUEIL
+
 def traiter(contenu):
     modele = 'gregorio'
     fichier = 'partition.gabc'

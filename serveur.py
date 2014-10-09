@@ -12,12 +12,25 @@ for m in config.PLUGINS: PLUGINS[m] = __import__(m)
 PWD = os.path.abspath(os.getcwd())
 
 class Site:
+    @cherrypy.expose
+    def index(self):
+        return Page("Coucou !").contenu
+    @cherrypy.expose
+    def css(self):
+        with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))
+        try:
+            plugin = PLUGINS[cherrypy.session['module']].CSS
+        except KeyError:
+            plugin = ''
+        return css.substitute(plugin = plugin)
+
+class Site_old:
     exposed = True
     @cherrypy.tools.accept(media='text/html')
     @cherrypy.expose
     def GET(self,url='gregorio'):
-        if url in PLUGINS:
-            cherrypy.session['plugin'] = url
+        if url in MODULES:
+            cherrypy.session['module'] = url
             page = Page(PLUGINS[cherrypy.session['plugin']].ACCUEIL)
             return page.contenu
         elif url == 'css': return self.css
@@ -39,6 +52,12 @@ class Site:
         except KeyError:
             plugin = ''
         return css.substitute(plugin = plugin)
+
+def presenter(accueillir):
+    return accueillir
+
+def test():
+    return "Coucou !"
 
 class Page:
     def __init__(self,corps):
@@ -66,9 +85,6 @@ if __name__ == '__main__':
 
     site_config = {
          '/': {
-             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-             'tools.response_headers.on': True,
-             'tools.response_headers.headers': [('Content-Type', 'text/html')],
              'tools.sessions.on': True,
              'tools.staticdir.root': PWD
          },
@@ -77,6 +93,11 @@ if __name__ == '__main__':
              'tools.staticdir.dir': './static'
          },
         }
-
+    
+    site = Site()
+    setattr(site,'test',cherrypy.expose(presenter(test)))
+    for m in PLUGINS.keys():
+        setattr(site,m,cherrypy.expose(presenter(PLUGINS[m].accueillir)))
+    
 #    cherrypy.config.update(server_config)
-    cherrypy.quickstart(Site(), '/', site_config)
+    cherrypy.quickstart(site, '/', site_config)
