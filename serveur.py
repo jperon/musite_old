@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os,sys,re,hashlib
 from string import Template
+sys.path.insert(0, './etc')
 sys.path.insert(0, './lib')
 sys.path.insert(0, './lib/plugins')
 import config
@@ -79,12 +80,12 @@ if __name__ == '__main__':
              'tools.basic_auth.encrypt': encrypt_pw
              }
         }
-    
+
     site = Site()
     for m in PLUGINS.keys():
         site_config[m] = {'tools.sessions.on':True}
         setattr(site,m,cherrypy.expose(presenter(PLUGINS[m].accueillir,m)))
     site.admin = cherrypy.expose(admin)
-    
+
     cherrypy.config.update(config.SERVER_CONFIG)
     cherrypy.quickstart(site, '/', site_config)

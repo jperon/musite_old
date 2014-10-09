@@ -26,6 +26,8 @@ tmp/
 log
 *~
 static/files
+etc/config.py
+etc/utilisateurs
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
