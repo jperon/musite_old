@@ -6,6 +6,7 @@ sys.path.insert(0, './lib')
 sys.path.insert(0, './lib/plugins')
 import config
 import cherrypy
+import utilisateurs as u
 
 PLUGINS = {}
 for m in config.PLUGINS: PLUGINS[m] = __import__(m)
@@ -55,7 +56,7 @@ class Page:
                             )
 
 def users():
-    return {'admin':'d033e22ae348aeb5660fc2140aec35850c4da997'}
+    return u.lister(os.path.join(PWD,'etc','utilisateurs'))
 
 def encrypt_pw(pw):
     pw = pw.encode('utf-8')
