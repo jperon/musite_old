@@ -6,8 +6,6 @@ from string import Template
 NOM = os.path.splitext(os.path.basename(__file__))[0]
 PWD = os.path.abspath(os.getcwd())
 DOSSIER = os.path.join('lib','plugins','gregorio')
-with open(os.path.join(DOSSIER,'saisie.html')) as f:
-    SAISIE = Template(f.read(-1)).substitute(nom = NOM)
 with open(os.path.join(DOSSIER,'style.css')) as f:
     CSS = f.read(-1)
 
@@ -17,7 +15,9 @@ def accueillir(*arguments,**parametres):
         f.write('paramètres : {0}\n'.format(str(parametres)))
     try:
         return{'traiter': traiter(parametres['texte'])}[arguments[0]]
-    except KeyError: return SAISIE
+    except KeyError:
+        with open(os.path.join(DOSSIER,'saisie.html')) as f:
+            return Template(f.read(-1)).substitute(nom = NOM)
 
 def traiter(contenu):
     modele = 'gregorio'

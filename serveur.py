@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os,sys,re
+import os,sys,re,hashlib
 from string import Template
 sys.path.insert(0, './lib')
 sys.path.insert(0, './lib/plugins')
@@ -14,7 +14,8 @@ PWD = os.path.abspath(os.getcwd())
 class Site:
     @cherrypy.expose
     def index(self):
-        return Page("Coucou !").contenu
+        with open('lib/index.html','r') as f:
+            return Page(f.read(-1)).contenu
     @cherrypy.expose
     def css(self):
         with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))
@@ -32,13 +33,17 @@ def presenter(accueillir,plugin):
 
 
 def admin():
-    return 'Accès réservé.'
+    return Page('Accès réservé.').contenu
 
 
 class Page:
     def __init__(self,corps):
         with open(os.path.join('modeles','page.html')) as f: self.page = Template(f.read(-1))
-        self.index = '<ul>\n' + '\n'.join(['<li plain=true><a href=/{0}/>{0}</a></li>'.format(plugin) for plugin in config.PLUGINS]) + '\n</ul>'
+        self.index = ('<b>Pages</b><ul>\n'
+            + '\n'.join(['<li plain=true><a href=/{0}/>{0}</a></li>'.format(plugin) for plugin in config.PLUGINS])
+            + '\n</ul>'
+            + '<b><a href="/admin/">Admin</a></b>'
+            )
         self.corps = corps
     @property
     def contenu(self):
@@ -49,10 +54,11 @@ class Page:
                             )
 
 def users():
-    return {'jacques':'patouche'}
+    return {'admin':'d033e22ae348aeb5660fc2140aec35850c4da997'}
 
 def encrypt_pw(pw):
-    return pw
+    pw = pw.encode('utf-8')
+    return hashlib.sha1(pw).hexdigest()
 
 if __name__ == '__main__':
     server_config={
