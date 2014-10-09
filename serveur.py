@@ -61,14 +61,7 @@ def encrypt_pw(pw):
     return hashlib.sha1(pw).hexdigest()
 
 if __name__ == '__main__':
-    server_config={
-        'server.socket_host': '0.0.0.0',
-        'server.socket_port':2443,
-
-        'server.ssl_module':'builtin',
-        'server.ssl_certificate':'/etc/ssl/musite.pem',
-        'server.ssl_private_key':'/etc/ssl/musite.pem',
-        }
+    config.SERVER_CONFIG
 
     site_config = {
          '/': {
@@ -93,5 +86,5 @@ if __name__ == '__main__':
         setattr(site,m,cherrypy.expose(presenter(PLUGINS[m].accueillir,m)))
     site.admin = cherrypy.expose(admin)
     
-    cherrypy.config.update(server_config)
+    cherrypy.config.update(config.SERVER_CONFIG)
     cherrypy.quickstart(site, '/', site_config)
