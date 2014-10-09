@@ -3,10 +3,11 @@ import subprocess as sp
 import cherrypy
 from string import Template
 
+NOM = os.path.splitext(os.path.basename(__file__))[0]
 PWD = os.path.abspath(os.getcwd())
 DOSSIER = os.path.join('lib','plugins','gregorio')
 with open(os.path.join(DOSSIER,'saisie.html')) as f:
-    SAISIE = Template(f.read(-1)).substitute(nom = os.path.splitext(os.path.basename(__file__))[0])
+    SAISIE = Template(f.read(-1)).substitute(nom = NOM)
 with open(os.path.join(DOSSIER,'style.css')) as f:
     CSS = f.read(-1)
 
@@ -43,7 +44,10 @@ def traiter(contenu):
                 )
     sortie,erreurs = sp.Popen(commande,env=environnement,stdout=sp.PIPE,stderr=sp.PIPE).communicate()
     os.chdir(PWD)
-    return {'dossier':destination,'fichier':'partition.pdf'}
+    os.renames(os.path.join(destination,'partition.pdf'),os.path.join('static','files',NOM,'partition.pdf'))
+    return '<object type="application/pdf" data="/static/files/{0}/{1}" zoom="page" width="100%" height="100%"></object>'.format(
+                NOM,'partition.pdf'
+                )
 
 
 

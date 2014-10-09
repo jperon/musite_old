@@ -24,36 +24,21 @@ class Site:
             plugin = ''
         return css.substitute(plugin = plugin)
 
-class Site_old:
-    exposed = True
-    @cherrypy.tools.accept(media='text/html')
-    @cherrypy.expose
-    def GET(self,url='gregorio'):
-        if url in MODULES:
-            cherrypy.session['plugin'] = url
-            page = Page(PLUGINS[cherrypy.session['plugin']].ACCUEIL)
-            return page.contenu
-        elif url == 'css': return self.css
-        else: return Page('<p>404 : Il doit y avoir une erreur dans votre adresse…</p>').contenu
-    @property
-    def css(self):
-        with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))
-        try:
-            plugin = PLUGINS[cherrypy.session['plugin']].CSS
-        except KeyError:
-            plugin = ''
-        return css.substitute(plugin = plugin)
-
 def presenter(accueillir,plugin):
     def retour(*arguments,**parametres):
         cherrypy.session['plugin'] = plugin
         return Page(accueillir(*arguments,**parametres)).contenu
     return retour
 
+
+def admin():
+    return 'Accès réservé.'
+
+
 class Page:
     def __init__(self,corps):
         with open(os.path.join('modeles','page.html')) as f: self.page = Template(f.read(-1))
-        self.index = '<ul>\n' + '\n'.join(['<li plain=true><a href=/{0}>{0}</a></li>'.format(plugin) for plugin in config.PLUGINS]) + '\n</ul>'
+        self.index = '<ul>\n' + '\n'.join(['<li plain=true><a href=/{0}/>{0}</a></li>'.format(plugin) for plugin in config.PLUGINS]) + '\n</ul>'
         self.corps = corps
     @property
     def contenu(self):
@@ -63,6 +48,11 @@ class Page:
                             corps = self.corps,
                             )
 
+def users():
+    return {'jacques':'patouche'}
+
+def encrypt_pw(pw):
+    return pw
 
 if __name__ == '__main__':
     server_config={
@@ -78,17 +68,24 @@ if __name__ == '__main__':
          '/': {
              'tools.sessions.on': True,
              'tools.staticdir.root': PWD
-         },
+             },
          '/static': {
              'tools.staticdir.on': True,
              'tools.staticdir.dir': './static'
-         },
+             },
+         '/admin': {
+             'tools.basic_auth.on': True,
+             'tools.basic_auth.realm': 'Accès réservé',
+             'tools.basic_auth.users': users,
+             'tools.basic_auth.encrypt': encrypt_pw
+             }
         }
     
     site = Site()
     for m in PLUGINS.keys():
         site_config[m] = {'tools.sessions.on':True}
         setattr(site,m,cherrypy.expose(presenter(PLUGINS[m].accueillir,m)))
+    site.admin = cherrypy.expose(admin)
     
-#    cherrypy.config.update(server_config)
+    cherrypy.config.update(server_config)
     cherrypy.quickstart(site, '/', site_config)
