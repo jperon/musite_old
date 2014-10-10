@@ -34,8 +34,13 @@ def presenter(accueillir,plugin):
     return retour
 
 
-def admin():
-    return str(Page('Accès réservé.'))
+class Admin():
+    @cherrypy.expose
+    def index(self):
+        return str(Page('Accès réservé.'))
+    @cherrypy.expose
+    def utilisateurs(self):
+        return str(Page('<br>'.join([u for u in utilisateurs().keys()])))
 
 
 class Page:
@@ -44,7 +49,8 @@ class Page:
         self.index = ('<b>Pages</b><ul>\n'
             + '\n'.join(['<li plain=true><a href=/{0}/>{0}</a></li>'.format(plugin) for plugin in config.PLUGINS])
             + '\n</ul>'
-            + '<b><a href="/admin/">Admin</a></b>'
+            + '<b><a href="/admin/">Admin</a></b><ul>\n'
+            + '<a href="/admin/utilisateurs">utilisateurs</a></ul>\n'
             )
         self.corps = corps
     @property
@@ -57,10 +63,10 @@ class Page:
     def __str__(self):
         return self.contenu
 
-def users():
+def utilisateurs():
     return u.lister(os.path.join(PWD,'etc','utilisateurs'))
 
-def encrypt_pw(pw):
+def crypter_pw(pw):
     pw = pw.encode('utf-8')
     return hashlib.sha1(pw).hexdigest()
 
@@ -79,8 +85,8 @@ if __name__ == '__main__':
          '/admin': {
              'tools.basic_auth.on': True,
              'tools.basic_auth.realm': 'Accès réservé',
-             'tools.basic_auth.users': users,
-             'tools.basic_auth.encrypt': encrypt_pw
+             'tools.basic_auth.users': utilisateurs,
+             'tools.basic_auth.encrypt': crypter_pw
              }
         }
 
@@ -88,7 +94,7 @@ if __name__ == '__main__':
     for m in PLUGINS.keys():
         site_config[m] = {'tools.sessions.on':True}
         setattr(site,m,cherrypy.expose(presenter(PLUGINS[m].accueillir,m)))
-    site.admin = cherrypy.expose(admin)
+    site.admin = Admin()
 
     cherrypy.config.update(config.SERVER_CONFIG)
     cherrypy.quickstart(site, '/', site_config)
