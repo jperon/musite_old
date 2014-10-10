@@ -28,6 +28,7 @@ log
 static/files
 etc/config.py
 etc/utilisateurs
+etc/groupes
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

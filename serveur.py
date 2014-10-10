@@ -6,7 +6,7 @@ sys.path.insert(0, './lib')
 sys.path.insert(0, './lib/plugins')
 import config
 import cherrypy
-import utilisateurs as u
+import utilisateurs as u, groupes as g
 
 PLUGINS = {}
 for m in config.PLUGINS: PLUGINS[m] = __import__(m)
@@ -65,6 +65,9 @@ class Page:
 
 def utilisateurs():
     return u.lister(os.path.join(PWD,'etc','utilisateurs'))
+
+def groupes():
+    return g.lister(os.path.join(PWD,'etc','groupes'))
 
 def crypter_pw(pw):
     pw = pw.encode('utf-8')
