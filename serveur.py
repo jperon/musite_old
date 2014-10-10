@@ -30,12 +30,12 @@ class Site:
 def presenter(accueillir,plugin):
     def retour(*arguments,**parametres):
         cherrypy.session['plugin'] = plugin
-        return Page(accueillir(*arguments,**parametres)).contenu
+        return str(Page(accueillir(*arguments,**parametres)))
     return retour
 
 
 def admin():
-    return Page('Accès réservé.').contenu
+    return str(Page('Accès réservé.'))
 
 
 class Page:
@@ -54,6 +54,8 @@ class Page:
                             index = self.index,
                             corps = self.corps,
                             )
+    def __str__(self):
+        return self.contenu
 
 def users():
     return u.lister(os.path.join(PWD,'etc','utilisateurs'))

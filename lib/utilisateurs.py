@@ -20,6 +20,7 @@ class Utilisateur:
         if self.nom not in lister(fichier).keys():
             with open(fichier,'a') as f:
                 f.write('{0}\t{1}\n'.format(self.nom,encoder(self.mdp)))
+        else: raise UtilisateurExistant(self.nom)
     def supprimer(self,fichier):
         utilisateurs = lister(fichier)
         try:
@@ -38,6 +39,9 @@ class Utilisateur:
         return self.nom + '\t' + self.mdp
     def __repr__(self):
         return self.__str__()
+
+class UtilisateurExistant(Exception):
+    pass
 
 if __name__ == '__main__':
     try:
