@@ -37,7 +37,7 @@ def presenter(accueillir,plugin):
 class Admin():
     @cherrypy.expose
     def index(self):
-        return str(Page('Accès réservé.'))
+        return str(Page('Bonjour, {0} !'.format(cherrypy.request.login)))
     @cherrypy.expose
     def utilisateurs(self):
         return str(Page('<br>'.join([u for u in utilisateurs().keys()])))
