@@ -27,13 +27,6 @@ class Site:
             plugin = ''
         return css.substitute(plugin = plugin)
 
-def presenter(accueillir,plugin):
-    def retour(*arguments,**parametres):
-        cherrypy.session['plugin'] = plugin
-        return str(Page(accueillir(*arguments,**parametres)))
-    return retour
-
-
 class Admin():
     @cherrypy.expose
     def index(self):
@@ -41,7 +34,6 @@ class Admin():
     @cherrypy.expose
     def utilisateurs(self):
         return str(Page('<br>'.join([u for u in utilisateurs().keys()])))
-
 
 class Page:
     def __init__(self,corps):
@@ -62,6 +54,19 @@ class Page:
                             )
     def __str__(self):
         return self.contenu
+
+def presenter(accueillir,plugin):
+    def retour(*arguments,**parametres):
+        cherrypy.session['plugin'] = plugin
+        return str(Page(accueillir(*arguments,**parametres)))
+    return retour
+
+def reserver(groupe):
+    def afficher(fonction):
+        if cherrypy.request.login in g.lister(os.path.join(PWD,'etc','groupes'))[groupe]:
+            return(fonction)
+        else:return print('Non autorisé')
+    return afficher
 
 def utilisateurs():
     return u.lister(os.path.join(PWD,'etc','utilisateurs'))
