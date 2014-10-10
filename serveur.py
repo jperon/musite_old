@@ -13,6 +13,45 @@ for m in config.PLUGINS: PLUGINS[m] = __import__(m)
 
 PWD = os.path.abspath(os.getcwd())
 
+def presenter(accueillir,plugin):
+    def retour(*arguments,**parametres):
+        cherrypy.session['plugin'] = plugin
+        return str(Page(accueillir(*arguments,**parametres)))
+    return retour
+
+def test(arg):
+    return 'Coucou'
+
+def reserver(**critere):
+    def decorateur(fonction):
+        if 'utilisateur' in critere:
+            def afficher(arg):
+                if cherrypy.request.login in critere['utilisateur']:
+                    return fonction(arg)
+                else:return str(Page('''Accès interdit : seul l'utilisateur {} est admis ici.'''.format(critere['utilisateur'])))
+        elif 'utilisateurs' in critere:
+            def afficher(arg):
+                if cherrypy.request.login in critere['utilisateurs']:
+                    return fonction(arg)
+                else:return str(Page('''Accès interdit : seuls les utilisateurs {} sont admis ici.'''.format(critere['utilisateurs'])))
+        elif 'groupe' in critere:
+            def afficher(arg):
+                if cherrypy.request.login in g.lister(os.path.join(PWD,'etc','groupes'))[critere['groupe']]:
+                    return fonction(arg)
+                else:return str(Page('Accès interdit : seuls les membres du groupe {} sont admis ici.'.format(critere['groupe'])))
+        return afficher
+    return decorateur
+
+def utilisateurs():
+    return u.lister(os.path.join(PWD,'etc','utilisateurs'))
+
+def groupes():
+    return g.lister(os.path.join(PWD,'etc','groupes'))
+
+def crypter_pw(pw):
+    pw = pw.encode('utf-8')
+    return hashlib.sha1(pw).hexdigest()
+
 class Site:
     @cherrypy.expose
     def index(self):
@@ -32,6 +71,7 @@ class Admin():
     def index(self):
         return str(Page('Bonjour, {0} !'.format(cherrypy.request.login)))
     @cherrypy.expose
+    @reserver(utilisateur='admin')
     def utilisateurs(self):
         return str(Page('<br>'.join([u for u in utilisateurs().keys()])))
 
@@ -54,29 +94,6 @@ class Page:
                             )
     def __str__(self):
         return self.contenu
-
-def presenter(accueillir,plugin):
-    def retour(*arguments,**parametres):
-        cherrypy.session['plugin'] = plugin
-        return str(Page(accueillir(*arguments,**parametres)))
-    return retour
-
-def reserver(groupe):
-    def afficher(fonction):
-        if cherrypy.request.login in g.lister(os.path.join(PWD,'etc','groupes'))[groupe]:
-            return(fonction)
-        else:return print('Non autorisé')
-    return afficher
-
-def utilisateurs():
-    return u.lister(os.path.join(PWD,'etc','utilisateurs'))
-
-def groupes():
-    return g.lister(os.path.join(PWD,'etc','groupes'))
-
-def crypter_pw(pw):
-    pw = pw.encode('utf-8')
-    return hashlib.sha1(pw).hexdigest()
 
 if __name__ == '__main__':
     config.SERVER_CONFIG
