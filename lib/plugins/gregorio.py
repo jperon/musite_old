@@ -4,7 +4,7 @@ import cherrypy
 from string import Template
 import outils as s, auth as a
 
-NOM = os.path.splitext(os.path.basename(__file__))[0]
+NOM = __name__
 PWD = os.path.abspath(os.getcwd())
 DOSSIER = os.path.join('lib','plugins','gregorio')
 with open(os.path.join(DOSSIER,'style.css')) as f: CSS = f.read(-1)

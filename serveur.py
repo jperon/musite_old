@@ -13,6 +13,7 @@ for m in config.PLUGINS: PLUGINS[m] = __import__(m)
 
 PWD = os.path.abspath(os.getcwd())
 
+
 def presenter(retourner,plugin):
     '''Chargement des plugins.'''
     def retour(*arguments,**parametres):
@@ -24,10 +25,11 @@ class Site:
     '''Cœur du site : chaque méthode décorée par cherrypy.expose
     correspond à une page du site.'''
     @cherrypy.expose
+    @s.page
     def index(self):
         '''Page d'accueil.'''
         with open('lib/index.html','r') as f:
-            return s.Page(f.read(-1)).contenu
+            return f.read(-1)
     @cherrypy.expose
     @cherrypy.expose
     def css(self):
@@ -42,12 +44,14 @@ class Site:
 class Admin():
     @cherrypy.expose
     @a.reserver(groupe='admin')
+    @s.page
     def index(self):
-        return str(s.Page('Bonjour, {0} !'.format(cherrypy.request.login)))
+        return 'Bonjour, {0} !'.format(cherrypy.request.login)
     @cherrypy.expose
     @a.reserver(utilisateur='admin')
+    @s.page
     def utilisateurs(self):
-        return str(s.Page('<br>'.join([u for u in utilisateurs().keys()])))
+        return '<br>'.join([u for u in a.utilisateurs().keys()])
 
 if __name__ == '__main__':
     config.SERVER_CONFIG
