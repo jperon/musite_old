@@ -48,16 +48,3 @@ def traiter(contenu):
     return '<object type="application/pdf" data="/static/files/{0}/{1}" zoom="page" width="100%" height="100%"></object>'.format(
                 NOM,'partition.pdf'
                 )
-
-
-
-'''
-def POST(self,url='gregorio',texte=''):
-        sortie = PLUGINS[cherrypy.session['plugin']].traiter(texte)
-        os.renames(os.path.join(sortie['dossier'],sortie['fichier']),os.path.join('static','files',cherrypy.session['plugin'],sortie['fichier']))
-        return Page(
-            '<object type="application/pdf" data="/static/files/{0}/{1}" zoom="page" width="100%" height="100%"></object>'.format(
-                cherrypy.session['plugin'],sortie['fichier']
-                )
-            ).contenu
-'''

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-import os,sys,re,hashlib
+import os,sys,re
 from string import Template
 sys.path.insert(0, './etc')
 sys.path.insert(0, './lib')
 sys.path.insert(0, './lib/plugins')
 import cherrypy
 import config
-import utilisateurs as u, groupes as g, auth as a, outils as s
+import auth as a, outils as s
 
 PLUGINS = {}
 for m in config.PLUGINS: PLUGINS[m] = __import__(m)
@@ -14,29 +14,24 @@ for m in config.PLUGINS: PLUGINS[m] = __import__(m)
 PWD = os.path.abspath(os.getcwd())
 
 def presenter(accueillir,plugin):
+    '''Chargement des plugins.'''
     def retour(*arguments,**parametres):
         cherrypy.session['plugin'] = plugin
         return str(s.Page(accueillir(*arguments,**parametres)))
     return retour
 
-def utilisateurs():
-    return u.lister(os.path.join(PWD,'etc','utilisateurs'))
-
-@property
-def groupes():
-    return g.lister(os.path.join(PWD,'etc','groupes'))
-
-def crypter_pw(pw):
-    pw = pw.encode('utf-8')
-    return hashlib.sha1(pw).hexdigest()
-
 class Site:
+    '''Cœur du site : chaque méthode décorée par cherrypy.expose
+    correspond à une page du site.'''
     @cherrypy.expose
     def index(self):
+        '''Page d'accueil.'''
         with open('lib/index.html','r') as f:
             return s.Page(f.read(-1)).contenu
     @cherrypy.expose
+    @cherrypy.expose
     def css(self):
+        '''Feuille de styles.'''
         with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))
         try:
             plugin = PLUGINS[cherrypy.session['plugin']].CSS
@@ -46,6 +41,7 @@ class Site:
 
 class Admin():
     @cherrypy.expose
+    @a.reserver(groupe='admin')
     def index(self):
         return str(s.Page('Bonjour, {0} !'.format(cherrypy.request.login)))
     @cherrypy.expose
@@ -65,12 +61,6 @@ if __name__ == '__main__':
              'tools.staticdir.on': True,
              'tools.staticdir.dir': './static'
              },
-         '/admin': {
-             'tools.basic_auth.on': True,
-             'tools.basic_auth.realm': 'Accès réservé',
-             'tools.basic_auth.users': utilisateurs,
-             'tools.basic_auth.encrypt': crypter_pw
-             }
         }
 
     site = Site()
