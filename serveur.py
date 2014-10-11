@@ -4,9 +4,9 @@ from string import Template
 sys.path.insert(0, './etc')
 sys.path.insert(0, './lib')
 sys.path.insert(0, './lib/plugins')
-import config
 import cherrypy
-import utilisateurs as u, groupes as g
+import config
+import utilisateurs as u, groupes as g, auth as a, outils as s
 
 PLUGINS = {}
 for m in config.PLUGINS: PLUGINS[m] = __import__(m)
@@ -16,35 +16,13 @@ PWD = os.path.abspath(os.getcwd())
 def presenter(accueillir,plugin):
     def retour(*arguments,**parametres):
         cherrypy.session['plugin'] = plugin
-        return str(Page(accueillir(*arguments,**parametres)))
+        return str(s.Page(accueillir(*arguments,**parametres)))
     return retour
-
-def test(arg):
-    return 'Coucou'
-
-def reserver(**critere):
-    def decorateur(fonction):
-        if 'utilisateur' in critere:
-            def afficher(arg):
-                if cherrypy.request.login in critere['utilisateur']:
-                    return fonction(arg)
-                else:return str(Page('''Accès interdit : seul l'utilisateur {} est admis ici.'''.format(critere['utilisateur'])))
-        elif 'utilisateurs' in critere:
-            def afficher(arg):
-                if cherrypy.request.login in critere['utilisateurs']:
-                    return fonction(arg)
-                else:return str(Page('''Accès interdit : seuls les utilisateurs {} sont admis ici.'''.format(critere['utilisateurs'])))
-        elif 'groupe' in critere:
-            def afficher(arg):
-                if cherrypy.request.login in g.lister(os.path.join(PWD,'etc','groupes'))[critere['groupe']]:
-                    return fonction(arg)
-                else:return str(Page('Accès interdit : seuls les membres du groupe {} sont admis ici.'.format(critere['groupe'])))
-        return afficher
-    return decorateur
 
 def utilisateurs():
     return u.lister(os.path.join(PWD,'etc','utilisateurs'))
 
+@property
 def groupes():
     return g.lister(os.path.join(PWD,'etc','groupes'))
 
@@ -56,7 +34,7 @@ class Site:
     @cherrypy.expose
     def index(self):
         with open('lib/index.html','r') as f:
-            return Page(f.read(-1)).contenu
+            return s.Page(f.read(-1)).contenu
     @cherrypy.expose
     def css(self):
         with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))
@@ -69,31 +47,11 @@ class Site:
 class Admin():
     @cherrypy.expose
     def index(self):
-        return str(Page('Bonjour, {0} !'.format(cherrypy.request.login)))
+        return str(s.Page('Bonjour, {0} !'.format(cherrypy.request.login)))
     @cherrypy.expose
-    @reserver(utilisateur='admin')
+    @a.reserver(utilisateur='admin')
     def utilisateurs(self):
-        return str(Page('<br>'.join([u for u in utilisateurs().keys()])))
-
-class Page:
-    def __init__(self,corps):
-        with open(os.path.join('modeles','page.html')) as f: self.page = Template(f.read(-1))
-        self.index = ('<b>Pages</b><ul>\n'
-            + '\n'.join(['<li plain=true><a href=/{0}/>{0}</a></li>'.format(plugin) for plugin in config.PLUGINS])
-            + '\n</ul>'
-            + '<b><a href="/admin/">Admin</a></b><ul>\n'
-            + '<a href="/admin/utilisateurs">utilisateurs</a></ul>\n'
-            )
-        self.corps = corps
-    @property
-    def contenu(self):
-        return self.page.substitute(
-                            titre = config.TITRE,
-                            index = self.index,
-                            corps = self.corps,
-                            )
-    def __str__(self):
-        return self.contenu
+        return str(s.Page('<br>'.join([u for u in utilisateurs().keys()])))
 
 if __name__ == '__main__':
     config.SERVER_CONFIG
