@@ -13,11 +13,11 @@ for m in config.PLUGINS: PLUGINS[m] = __import__(m)
 
 PWD = os.path.abspath(os.getcwd())
 
-def presenter(accueillir,plugin):
+def presenter(retourner,plugin):
     '''Chargement des plugins.'''
     def retour(*arguments,**parametres):
         cherrypy.session['plugin'] = plugin
-        return str(s.Page(accueillir(*arguments,**parametres)))
+        return retourner(*arguments,**parametres)
     return retour
 
 class Site:
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     site = Site()
     for m in PLUGINS.keys():
         site_config[m] = {'tools.sessions.on':True}
-        setattr(site,m,cherrypy.expose(presenter(PLUGINS[m].accueillir,m)))
+        setattr(site,m,cherrypy.expose(presenter(PLUGINS[m].retourner,m)))
     site.admin = Admin()
 
     cherrypy.config.update(config.SERVER_CONFIG)

@@ -4,16 +4,17 @@
         id : "saisie"
         ,language: "fr"
         ,syntax: "gabc"
-        ,word_wrap:true
+        ,word_wrap:false
         ,show_line_colors:true
         ,start_highlight: true
     });
 </script>
 <div id="zonesaisie">
     <form method="post" action="/${nom}/traiter/">
-        <textarea name="texte" id="saisie"></textarea>
+        <textarea name="texte" id="saisie" placeholder="Code gabc"></textarea>
         <br>
-        <button type="submit">Compiler</button>
+        <button type="submit" name="action" value="compiler">Compiler</button>
+        <button type="submit" name="action" value="enregistrer">Enregistrer</button>
     </form>
 </div>
 <div id="apercu">
