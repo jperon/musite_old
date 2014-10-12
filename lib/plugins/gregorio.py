@@ -1,6 +1,5 @@
 import os,shutil
 import subprocess as sp
-import cherrypy
 from string import Template
 import outils as s, auth as a
 

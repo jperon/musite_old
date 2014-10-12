@@ -1,5 +1,5 @@
 import os,hashlib
-import cherrypy
+import cherrypy as cp
 import outils as s, utilisateurs as u, groupes as g
 
 PWD = os.path.abspath(os.getcwd())
@@ -26,26 +26,29 @@ def authentifier(royaume,nom,mdp):
 def reserver(**critere):
     def decorateur(fonction):
         def reclamer_authentification(forcer=False):
-            if cherrypy.request.login == None:
-                cherrypy.lib.auth_basic.basic_auth('Accès réservé',authentifier)
+            if cp.request.login == None:
+                try:
+                    cp.lib.auth_basic.basic_auth('Accès réservé',authentifier)
+                except cp.HTTPError:
+                    raise cp.HTTPRedirect('/')
                 with open('log','a') as f:
-                    f.write(cherrypy.request.login + '\n')
+                    f.write(cp.request.login + '\n')
         if 'utilisateur' in critere:
             def afficher(arg):
                 reclamer_authentification()
-                if cherrypy.request.login in critere['utilisateur']:
+                if cp.request.login in critere['utilisateur']:
                     return fonction(arg)
                 else:return '''Accès interdit : seul l'utilisateur {} est admis ici.'''.format(critere['utilisateur'])
         elif 'utilisateurs' in critere:
             def afficher(arg):
                 reclamer_authentification()
-                if cherrypy.request.login in critere['utilisateurs']:
+                if cp.request.login in critere['utilisateurs']:
                     return fonction(arg)
                 else:return '''Accès interdit : seuls les utilisateurs {} sont admis ici.'''.format(critere['utilisateurs'])
         elif 'groupe' in critere:
             def afficher(arg):
                 reclamer_authentification()
-                if cherrypy.request.login in groupes()[critere['groupe']]:
+                if cp.request.login in groupes()[critere['groupe']]:
                     return fonction(arg)
                 else:return '''Accès interdit : seuls les membres du groupe {} sont admis ici.'''.format(critere['groupe'])
         return afficher

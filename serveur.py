@@ -4,7 +4,7 @@ from string import Template
 sys.path.insert(0, './etc')
 sys.path.insert(0, './lib')
 sys.path.insert(0, './lib/plugins')
-import cherrypy
+import cherrypy as cp
 import config
 import auth as a, outils as s
 
@@ -14,38 +14,38 @@ PWD = os.path.abspath(os.getcwd())
 
 def presenter(retourner,plugin):
     '''Chargement des plugins.'''
-    @cherrypy.expose
+    @cp.expose
     def retour(*arguments,**parametres):
-        cherrypy.session['plugin'] = plugin
+        cp.session['plugin'] = plugin
         return retourner(*arguments,**parametres)
     return retour
 
 class Site:
     '''Cœur du site : chaque méthode décorée par cherrypy.expose
     correspond à une page du site.'''
-    @cherrypy.expose
+    @cp.expose
     @s.page
     def index(self):
         '''Page d'accueil.'''
         with open('lib/index.html','r') as f:
             return f.read(-1)
-    @cherrypy.expose
+    @cp.expose
     def css(self):
         '''Feuille de styles.'''
         with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))
         try:
-            plugin = PLUGINS[cherrypy.session['plugin']].CSS
+            plugin = PLUGINS[cp.session['plugin']].CSS
         except (AttributeError,KeyError):
             plugin = ''
         return css.substitute(plugin = plugin)
 
 class Admin():
-    @cherrypy.expose
+    @cp.expose
     @s.page
     @a.reserver(groupe='admin')
     def index(self):
-        return 'Bonjour, {0} !'.format(cherrypy.request.login)
-    @cherrypy.expose
+        return 'Bonjour, {0} !'.format(cp.request.login)
+    @cp.expose
     @s.page
     @a.reserver(utilisateur='admin')
     def utilisateurs(self):
@@ -71,5 +71,5 @@ if __name__ == '__main__':
         setattr(site,m,presenter(PLUGINS[m].retourner,m))
     site.admin = Admin()
 
-    cherrypy.config.update(config.SERVER_CONFIG)
-    cherrypy.quickstart(site, '/', site_config)
+    cp.config.update(config.SERVER_CONFIG)
+    cp.quickstart(site, '/', site_config)
