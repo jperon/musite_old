@@ -18,38 +18,24 @@ def groupes():
     return g.lister(os.path.join(PWD,'etc','groupes'))
 
 def authentifier(royaume,nom,mdp):
-    try:
-        return utilisateurs()[nom] == crypter(mdp)
-    except KeyError:
-        return False
+    #~ try:
+        if utilisateurs()[nom] == crypter(mdp):
+            critere = cp.session['reserve']
+            if 'utilisateur' in critere:
+                return nom == critere['utilisateur']
+            elif 'utilisateurs' in critere:
+                return nom in critere['utilisateurs']
+            elif 'groupe' in critere:
+                return nom in groupes()[critere['groupe']]
+    #~ except KeyError:
+        #~ return False
 
 def reserver(**critere):
     def decorateur(fonction):
-        def reclamer_authentification(forcer=False):
-            if cp.request.login == None:
-                try:
-                    cp.lib.auth_basic.basic_auth('Accès réservé',authentifier)
-                except cp.HTTPError:
-                    raise cp.HTTPRedirect('/')
-                with open('log','a') as f:
-                    f.write(cp.request.login + '\n')
-        if 'utilisateur' in critere:
-            def afficher(arg):
-                reclamer_authentification()
-                if cp.request.login in critere['utilisateur']:
-                    return fonction(arg)
-                else:return '''Accès interdit : seul l'utilisateur {} est admis ici.'''.format(critere['utilisateur'])
-        elif 'utilisateurs' in critere:
-            def afficher(arg):
-                reclamer_authentification()
-                if cp.request.login in critere['utilisateurs']:
-                    return fonction(arg)
-                else:return '''Accès interdit : seuls les utilisateurs {} sont admis ici.'''.format(critere['utilisateurs'])
-        elif 'groupe' in critere:
-            def afficher(arg):
-                reclamer_authentification()
-                if cp.request.login in groupes()[critere['groupe']]:
-                    return fonction(arg)
-                else:return '''Accès interdit : seuls les membres du groupe {} sont admis ici.'''.format(critere['groupe'])
+        def afficher(arg):
+            cp.session['reserve'] = critere
+            if cp.lib.auth_basic.basic_auth('Accès réservé',authentifier):
+                return fonction(arg)
+            else:return '''Accès interdit'''
         return afficher
     return decorateur

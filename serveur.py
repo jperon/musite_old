@@ -71,5 +71,9 @@ if __name__ == '__main__':
         setattr(site,m,presenter(PLUGINS[m].retourner,m))
     site.admin = Admin()
 
+    @s.page
+    def erreur_401(status, message, traceback, version):
+        return 'Accès réservé'
+    cp.config.update({'error_page.401': erreur_401})
     cp.config.update(config.SERVER_CONFIG)
     cp.quickstart(site, '/', site_config)
