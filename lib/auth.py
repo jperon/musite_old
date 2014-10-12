@@ -25,7 +25,7 @@ def authentifier(royaume,nom,mdp):
 
 def reserver(**critere):
     def decorateur(fonction):
-        def reclamer_authentification():
+        def reclamer_authentification(forcer=False):
             if cherrypy.request.login == None:
                 cherrypy.lib.auth_basic.basic_auth('Accès réservé',authentifier)
                 with open('log','a') as f:
@@ -35,18 +35,18 @@ def reserver(**critere):
                 reclamer_authentification()
                 if cherrypy.request.login in critere['utilisateur']:
                     return fonction(arg)
-                else:return str(s.Page('''Accès interdit : seul l'utilisateur {} est admis ici.'''.format(critere['utilisateur'])))
+                else:return '''Accès interdit : seul l'utilisateur {} est admis ici.'''.format(critere['utilisateur'])
         elif 'utilisateurs' in critere:
             def afficher(arg):
                 reclamer_authentification()
                 if cherrypy.request.login in critere['utilisateurs']:
                     return fonction(arg)
-                else:return str(s.Page('''Accès interdit : seuls les utilisateurs {} sont admis ici.'''.format(critere['utilisateurs'])))
+                else:return '''Accès interdit : seuls les utilisateurs {} sont admis ici.'''.format(critere['utilisateurs'])
         elif 'groupe' in critere:
             def afficher(arg):
                 reclamer_authentification()
                 if cherrypy.request.login in groupes()[critere['groupe']]:
                     return fonction(arg)
-                else:return str(s.Page('''Accès interdit : seuls les membres du groupe {} sont admis ici.'''.format(critere['groupe'])))
+                else:return '''Accès interdit : seuls les membres du groupe {} sont admis ici.'''.format(critere['groupe'])
         return afficher
     return decorateur

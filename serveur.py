@@ -10,12 +10,11 @@ import auth as a, outils as s
 
 PLUGINS = {}
 for m in config.PLUGINS: PLUGINS[m] = __import__(m)
-
 PWD = os.path.abspath(os.getcwd())
-
 
 def presenter(retourner,plugin):
     '''Chargement des plugins.'''
+    @cherrypy.expose
     def retour(*arguments,**parametres):
         cherrypy.session['plugin'] = plugin
         return retourner(*arguments,**parametres)
@@ -31,7 +30,6 @@ class Site:
         with open('lib/index.html','r') as f:
             return f.read(-1)
     @cherrypy.expose
-    @cherrypy.expose
     def css(self):
         '''Feuille de styles.'''
         with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))
@@ -43,13 +41,13 @@ class Site:
 
 class Admin():
     @cherrypy.expose
-    @a.reserver(groupe='admin')
     @s.page
+    @a.reserver(groupe='admin')
     def index(self):
         return 'Bonjour, {0} !'.format(cherrypy.request.login)
     @cherrypy.expose
-    @a.reserver(utilisateur='admin')
     @s.page
+    @a.reserver(utilisateur='admin')
     def utilisateurs(self):
         return '<br>'.join([u for u in a.utilisateurs().keys()])
 
@@ -70,7 +68,7 @@ if __name__ == '__main__':
     site = Site()
     for m in PLUGINS.keys():
         site_config[m] = {'tools.sessions.on':True}
-        setattr(site,m,cherrypy.expose(presenter(PLUGINS[m].retourner,m)))
+        setattr(site,m,presenter(PLUGINS[m].retourner,m))
     site.admin = Admin()
 
     cherrypy.config.update(config.SERVER_CONFIG)
