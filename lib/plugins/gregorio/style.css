@@ -1,8 +1,9 @@
 #zonesaisie {
 font-size: 108%;
 min-width:48%;
-width:auto;
-height:100%;
+min-height:70%;
+width:48%;
+height:auto;
 float:left;
 }
 
@@ -11,4 +12,8 @@ font-size: 108%;
 min-width: 48%;
 height:100%;
 float:right;
+}
+
+input {
+max-width:30%;
 }

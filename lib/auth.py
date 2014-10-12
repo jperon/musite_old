@@ -1,6 +1,6 @@
 import os,hashlib
 import cherrypy as cp
-import outils as s, utilisateurs as u, groupes as g
+import outils as s, utilisateurs as u, groupes as g, jrnl as l
 
 PWD = os.path.abspath(os.getcwd())
 
@@ -18,23 +18,23 @@ def groupes():
     return g.lister(os.path.join(PWD,'etc','groupes'))
 
 def authentifier(royaume,nom,mdp):
-    #~ try:
+    try:
         if utilisateurs()[nom] == crypter(mdp):
             critere = cp.session['reserve']
             if 'utilisateur' in critere:
-                return nom == critere['utilisateur']
+                return (nom == critere['utilisateur'])
             elif 'utilisateurs' in critere:
-                return nom in critere['utilisateurs']
+                return (nom in critere['utilisateurs'])
             elif 'groupe' in critere:
-                return nom in groupes()[critere['groupe']]
-    #~ except KeyError:
-        #~ return False
+                return (nom in groupes()[critere['groupe']])
+    except KeyError:
+        return False
 
 def reserver(**critere):
     def decorateur(fonction):
         def afficher(arg):
             cp.session['reserve'] = critere
-            if cp.lib.auth_basic.basic_auth('Accès réservé',authentifier):
+            if cp.lib.auth_basic.basic_auth('Droits insuffisants',authentifier) == None:
                 return fonction(arg)
             else:return '''Accès interdit'''
         return afficher

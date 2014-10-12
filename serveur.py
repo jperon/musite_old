@@ -34,7 +34,7 @@ class Site:
         '''Feuille de styles.'''
         with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))
         try:
-            plugin = PLUGINS[cp.session['plugin']].CSS
+            plugin = PLUGINS[cp.session['plugin']].css()
         except (AttributeError,KeyError):
             plugin = ''
         return css.substitute(plugin = plugin)

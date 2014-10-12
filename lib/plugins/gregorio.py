@@ -6,7 +6,9 @@ import outils as s, auth as a
 NOM = __name__
 PWD = os.path.abspath(os.getcwd())
 DOSSIER = os.path.join('lib','plugins','gregorio')
-with open(os.path.join(DOSSIER,'style.css')) as f: CSS = f.read(-1)
+
+def css():
+	with open(os.path.join(DOSSIER,'style.css')) as f: return f.read(-1)
 
 
 def retourner(*arguments,**parametres):
