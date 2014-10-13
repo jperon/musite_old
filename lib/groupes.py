@@ -4,9 +4,9 @@ import sys as s
 
 def lister(fichier):
     with open(fichier,'r') as f:
-        return {g[0]:[u for u in g[1].replace('\n','').split(',')]
-            for g in [l.split('\t') for l in f.readlines()
-                if '\t' in l]
+        return {
+            groupes[0]:[utilisateur for utilisateur in groupes[1].replace('\n','').split(',')]
+            for groupes in [ligne.split('\t') for ligne in f.readlines() if '\t' in ligne]
             }
 
 class Groupe:
