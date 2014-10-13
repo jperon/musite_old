@@ -25,7 +25,8 @@ var/
 tmp/
 log
 *~
-static/files
+static/fichiers
+static/data
 etc/config.py
 etc/utilisateurs
 etc/groupes

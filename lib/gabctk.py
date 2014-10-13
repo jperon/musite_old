@@ -242,6 +242,31 @@ class Gabc:
                 for ligne in self.parties[0].split('\n')
                 if ':' in ligne]
             }
+        categories = {
+                'introitus':'introitus',
+                'introit':'introitus',
+                'graduale':'graduale',
+                'graduel':'graduale',
+                'gradual':'graduale',
+                'alleluia':'alleluia',
+                'offertorium':'offertorium',
+                'offertoire':'offertorium',
+                'offertory':'offertorium',
+                'communio':'communio',
+                'communion':'communio',
+                'antiphona':'antiphona',
+                'antienne':'antiphona',
+                'antiphon':'antiphona',
+                'hymnus':'hymnus',
+                'hymne':'hymnus',
+                'hymn':'hymnus',
+                }
+        try:
+            if resultat['office-part'].lower() in categories.keys():
+                resultat['office-part'] = categories[resultat['office-part'].lower()]
+            else: resultat['office-part'] = {'varia'}
+        except KeyError:
+            resultat['office-part'] = {'varia'}
         return resultat
     @property
     def contenu(self):

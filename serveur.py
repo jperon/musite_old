@@ -5,12 +5,11 @@ sys.path.insert(0, './etc')
 sys.path.insert(0, './lib')
 sys.path.insert(0, './lib/plugins')
 import cherrypy as cp
-import config
+import config as c
 import auth as a, outils as s
 
 PLUGINS = {}
-for m in config.PLUGINS: PLUGINS[m] = __import__(m)
-PWD = os.path.abspath(os.getcwd())
+for m in c.PLUGINS: PLUGINS[m] = __import__(m)
 
 def presenter(retourner,plugin):
     '''Chargement des plugins.'''
@@ -52,12 +51,10 @@ class Admin():
         return '<br>'.join([u for u in a.utilisateurs().keys()])
 
 if __name__ == '__main__':
-    config.SERVER_CONFIG
-
     site_config = {
          '/': {
              'tools.sessions.on': True,
-             'tools.staticdir.root': PWD
+             'tools.staticdir.root': c.PWD
              },
          '/static': {
              'tools.staticdir.on': True,
@@ -75,5 +72,5 @@ if __name__ == '__main__':
     def erreur_401(status, message, traceback, version):
         return 'Accès réservé'
     cp.config.update({'error_page.401': erreur_401})
-    cp.config.update(config.SERVER_CONFIG)
+    cp.config.update(c.SERVER_CONFIG)
     cp.quickstart(site, '/', site_config)
