@@ -16,43 +16,51 @@ def css():
 def retourner(*arguments,**parametres):
     l.log('arguments : {}\n paramètres : {}\n'.format(str(arguments),str(parametres)))
     try:
-        return {
-            'saisir': saisir,
-            'traiter': traiter,
-            }[arguments[0]](parametres)
+        return eval(arguments[0])(parametres)
     except (KeyError,IndexError):
         return accueillir()
 
-def arborescence(dossier,generateur):
-    for d in dossier:
-        pass
-
 @s.page
 def accueillir():
+    def titregabc(f):
+        try:
+            entetes = g.Gabc(g.FichierTexte(f).contenu).entetes
+        except UnicodeDecodeError: return '''<b><i>Erreur d'encodage : {}</i></b>'''.format(f)
+        if 'name' in entetes: return entetes['name']
+        else: return '<b><i>À corriger : fichier sans balise "name" : {}</i></b>'.format(f)
     dossier = os.path.join(c.DATA,EXT)
     dossiers = os.walk(dossier)
     structure = '\n'.join(
         ['<b>{0}</b>\n<ul>\n\t<li>{1}</li>\n</ul>'.format(
-            d[0].replace(dossier + os.sep,''),
-            '</li>\n\t<li>'.join(d[2])
+            d[0].replace(dossier + os.sep,'').capitalize(),
+            '</li>\n\t<li>'.join(
+                '<a href="/gregorio/editer/?fichier={0}">{1}</a>'.format(
+                    os.path.join(d[0].replace(dossier + os.sep,''),fichier),
+                    titregabc(os.path.join(d[0],fichier))
+                    )
+                for fichier in sorted(d[2])),
             )
-        for d in dossiers if len(d[2])]
+        for d in sorted(dossiers) if len(d[2])]
         )
     l.log(structure)
     return structure
 
 @s.page
-def saisir(parametres):
-    with open(os.path.join(DOSSIER,'saisie.html')) as f, open(os.path.join(DOSSIER,'piece.gabc')) as g:
-            return Template(f.read(-1)).substitute(
+def editer(parametres):
+    if 'fichier' in parametres:
+        with open(os.path.join(c.DATA,EXT,parametres['fichier'])) as f:
+            texte = f.read(-1)
+    else:
+        with open(os.path.join(DOSSIER,'piece.gabc')) as f:
+            texte = f.read(-1)
+    with open(os.path.join(DOSSIER,'editeur.html')) as f:
+        return Template(f.read(-1)).substitute(
                 nom = NOM,
-                texte = g.read(-1),
+                texte = texte,
                 )
 
 def traiter(parametres):
-    return {'compiler':compiler,
-    'enregistrer':enregistrer,
-    }[parametres['action']](parametres)
+    return eval(parametres['action'])(parametres)
 
 @s.page
 def compiler(parametres):

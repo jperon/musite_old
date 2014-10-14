@@ -17,3 +17,12 @@ float:right;
 input {
 max-width:30%;
 }
+
+ul {
+-moz-column-count:3;
+column-count:3;
+list-style:none;
+margin-top:0px;
+margin-left:1ex;
+padding-left:0;
+}
