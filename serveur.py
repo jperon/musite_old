@@ -29,6 +29,13 @@ class Site:
         with open('lib/index.html','r') as f:
             return f.read(-1)
     @cp.expose
+    @s.page
+    @a.reserver(utilisateurs=a.utilisateurs())
+    def authentification(self):
+        '''Page sans grand intérêt, si ce n'est de forcer l'authentification
+        des utilisateurs.'''
+        return 'Bonjour, {0} !'.format(cp.request.login)
+    @cp.expose
     def css(self):
         '''Feuille de styles.'''
         with open(os.path.join('modeles','style.css')) as f: css = Template(f.read(-1))

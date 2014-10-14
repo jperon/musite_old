@@ -1,6 +1,6 @@
 import os,hashlib
 import cherrypy as cp
-import outils as s, utilisateurs as u, groupes as g, jrnl as l
+import utilisateurs as u, groupes as g, jrnl as l
 
 PWD = os.path.abspath(os.getcwd())
 
@@ -37,5 +37,28 @@ def reserver(**critere):
             if cp.lib.auth_basic.basic_auth('Droits insuffisants',authentifier) == None:
                 return fonction(arg)
             else:return '''Accès interdit'''
+        return afficher
+    return decorateur
+
+def seulement(**critere):
+    def decorateur(fonction):
+        def afficher(arg):
+            royaume = 'Droits insuffisants'
+            try:
+                if cp.lib.auth_basic.basic_auth(royaume,authentifier) == None:
+                    return fonction(arg)
+                else: return ''
+            except cp.HTTPError: return ''
+        return afficher
+    return decorateur
+
+def masquer(**critere):
+    def decorateur(fonction):
+        def afficher(arg):
+            try:
+                if cp.lib.auth_basic.basic_auth('Droits insuffisants',authentifier) == None:
+                    return ''
+                else: return fonction(arg)
+            except cp.HTTPError: return fonction(arg)
         return afficher
     return decorateur

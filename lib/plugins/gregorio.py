@@ -20,21 +20,22 @@ def retourner(*arguments,**parametres):
     except (KeyError,IndexError):
         return accueillir()
 
-@s.page
-def accueillir():
-    def titregabc(f):
+def titregabc(f):
         try:
             entetes = g.Gabc(g.FichierTexte(f).contenu).entetes
         except UnicodeDecodeError: return '''<b><i>Erreur d'encodage : {}</i></b>'''.format(f)
         if 'name' in entetes: return entetes['name']
         else: return '<b><i>À corriger : fichier sans balise "name" : {}</i></b>'.format(f)
+
+@s.page
+def accueillir():
     racine = os.path.join(c.DATA,EXT)
     dossiers = os.walk(racine)
     structure = '\n'.join(
         ['<b>{0}</b>\n<ul id="listechants">\n\t<li>{1}</li>\n</ul>'.format(
             dossier.replace(racine + os.sep,'').capitalize(),
             '</li>\n\t<li>'.join(
-                '<a href="/gregorio/editer/?fichier={0}">{1}</a>'.format(
+                '<a href="/gregorio/afficher/?fichier={0}">{1}</a>'.format(
                     os.path.join(dossier.replace(racine + os.sep,''),fichier),
                     titregabc(os.path.join(dossier,fichier))
                     )
@@ -42,14 +43,25 @@ def accueillir():
             )
         for dossier, sousdossiers, fichiers in sorted(dossiers) if len(fichiers)]
         )
-    l.log(structure)
     return structure
 
 @s.page
 def afficher(parametres):
-    dossier = os.path.join(c.PWD,'pdf',
-    if os.path.isfile(
-        compiler()
+    fichier = parametres['fichier'].split('/')
+    sousdossier,fichierpdf = fichier[:-1],fichier[-1].replace('.gabc','.pdf')
+    dossier = os.path.join(c.DATA,'pdf',os.sep.join(sousdossier))
+    if not os.path.isfile(os.path.join(dossier,fichierpdf)):
+        parametres['papier'] = 'a6paper'
+        parametres['taillepolice'] = '12'
+        parametres['marge'] = '20px'
+        compiler(parametres,dossier,fichierpdf)
+    with open(os.path.join(DOSSIER,'apercu.html')) as f:
+        return Template(f.read(-1)).substitute(
+                titre = titregabc(os.path.join(c.DATA,'gabc',os.sep.join(fichier))),
+                corps = '<object type="application/pdf" data="/public/data/pdf/{0}/{1}" zoom="page" width="100%" height="100%"></object>'.format(
+                        '/'.join(sousdossier),fichierpdf
+                        ),
+                )
 
 @s.page
 def telecharger(parametres):pass
@@ -72,36 +84,40 @@ def editer(parametres):
 def traiter(parametres):
     return eval(parametres['action'])(parametres)
 
-@s.page
-def compiler(parametres):
-    contenu = parametres['texte']
-    fichier = 'partition.gabc'
+def compiler(parametres,dossier,fichier):
+    if 'texte' in parametres.keys(): contenu = parametres['texte']
+    elif 'fichier' in parametres:
+        with open(os.path.join(c.DATA,'gabc',parametres['fichier'])) as f:
+            contenu = f.read(-1)
+    if 'papier' not in parametres: parametres['papier'] = 'a5paper'
+    if 'taillepolice' not in parametres: parametres['taillepolice'] = '12'
+    if 'marge' in parametres: parametres['marge'] = '\\usepackage[margin={0}]{{geometry}}'.format(parametres['marge'])
+    else: parametres['marge'] = ''
+    gabc = 'partition.gabc'
     commande = ['lualatex','-interaction=batchmode','--shell-escape','partition']
     destination = os.path.join(c.TMP,NOM)
-    environnement = os.environ.copy()
-    environnement['TEXINPUTS'] = 'lib:'
     shutil.rmtree(destination,True)
     shutil.copytree(
         os.path.join('modeles',NOM),
         destination
         )
     os.chdir(destination)
-    with open(os.path.join('gabc',fichier),'w') as f:
+    with open(os.path.join('gabc',gabc),'w') as f:
         f.write(contenu)
     with open('Gabarit.tex','r') as g:
         with open('partition.tex','w') as f:
             f.write(
-                g.read(-1) % {
-                    'papier': 'a5paper',
-                    'police': '12',
-                    }
+                Template(g.read(-1)).substitute(
+                    papier = parametres['papier'],
+                    taillepolice = parametres['taillepolice'],
+                    marge = parametres['marge'],
+                    )
                 )
+    environnement = os.environ.copy()
+    environnement['TEXINPUTS'] = 'lib:'
     sortie,erreurs = sp.Popen(commande,env=environnement,stdout=sp.PIPE,stderr=sp.PIPE).communicate()
     os.chdir(c.PWD)
-    os.renames(os.path.join(destination,'partition.pdf'),os.path.join('public','fichiers','pdf','partition.pdf'))
-    return '<object type="application/pdf" data="/public/fichiers/{0}/{1}" zoom="page" width="100%" height="100%"></object>'.format(
-                'pdf','partition.pdf'
-                )
+    os.renames(os.path.join(destination,'partition.pdf'),os.path.join(dossier,fichier))
 
 def enregistrer(parametres):
     gabc = g.Gabc(parametres['texte'])
