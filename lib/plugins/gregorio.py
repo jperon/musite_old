@@ -6,6 +6,7 @@ import outils as s, auth as a, gabctk as g
 import cherrypy as cp
 
 NOM = 'gregorio'
+EXT = 'gabc'
 DOSSIER = os.path.join('lib','plugins','gregorio')
 
 def css():
@@ -15,18 +16,38 @@ def css():
 def retourner(*arguments,**parametres):
     l.log('arguments : {}\n paramètres : {}\n'.format(str(arguments),str(parametres)))
     try:
-        return{'traiter': traiter(parametres)}[arguments[0]]
+        return {
+            'saisir': saisir,
+            'traiter': traiter,
+            }[arguments[0]](parametres)
     except (KeyError,IndexError):
         return accueillir()
 
+def arborescence(dossier,generateur):
+    for d in dossier:
+        pass
+
 @s.page
 def accueillir():
+    dossier = os.path.join(c.DATA,EXT)
+    dossiers = os.walk(dossier)
+    structure = '\n'.join(
+        ['<b>{0}</b>\n<ul>\n\t<li>{1}</li>\n</ul>'.format(
+            d[0].replace(dossier + os.sep,''),
+            '</li>\n\t<li>'.join(d[2])
+            )
+        for d in dossiers if len(d[2])]
+        )
+    l.log(structure)
+    return structure
+
+@s.page
+def saisir(parametres):
     with open(os.path.join(DOSSIER,'saisie.html')) as f, open(os.path.join(DOSSIER,'piece.gabc')) as g:
             return Template(f.read(-1)).substitute(
                 nom = NOM,
                 texte = g.read(-1),
                 )
-
 
 def traiter(parametres):
     return {'compiler':compiler,
@@ -66,9 +87,9 @@ def compiler(parametres):
 
 def enregistrer(parametres):
     gabc = g.Gabc(parametres['texte'])
-    dossier = os.path.join(c.DATA,'gabc',gabc.entetes['office-part'])
+    dossier = os.path.join(c.DATA,EXT,gabc.entetes['office-part'])
     os.makedirs(dossier,exist_ok=True)
-    fichier = gabc.entetes['name'].replace(' ','_').lower() + '.gabc'
+    fichier = gabc.entetes['name'].replace(' ','_').lower() + '.' + EXT
     with open(os.path.join(dossier,fichier),'w') as f:
         f.write(parametres['texte'])
     raise(cp.HTTPRedirect('/' + NOM))
