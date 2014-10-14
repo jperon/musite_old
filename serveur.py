@@ -56,9 +56,9 @@ if __name__ == '__main__':
              'tools.sessions.on': True,
              'tools.staticdir.root': c.PWD
              },
-         '/static': {
+         '/public': {
              'tools.staticdir.on': True,
-             'tools.staticdir.dir': './static'
+             'tools.staticdir.dir': './public'
              },
         }
 

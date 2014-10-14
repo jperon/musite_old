@@ -18,7 +18,7 @@ input {
 max-width:30%;
 }
 
-ul {
+#listechants {
 -moz-column-count:3;
 column-count:3;
 list-style:none;
