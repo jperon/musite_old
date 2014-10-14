@@ -1,13 +1,35 @@
+#titrechant {
+position:absolute;
+top:0pt;
+left:10pt;
+width:30%;
+height:3em;
+}
+
+#actions {
+position:absolute;
+top:0pt;
+right:10pt;
+width:auto;
+}
+
 #zonesaisie {
+position:absolute;
+top:3em;
+bottom:0pt;
+left:0pt;
 font-size: 108%;
 min-width:48%;
 min-height:70%;
 width:48%;
 height:auto;
-float:left;
 }
 
 #apercu {
+position:absolute;
+top:3em;
+bottom:0pt;
+right:0pt;
 font-size: 108%;
 min-width: 48%;
 height:100%;

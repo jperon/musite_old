@@ -52,7 +52,7 @@ def seulement(**critere):
         return afficher
     return decorateur
 
-def masquer(**critere):
+def exclure(**critere):
     def decorateur(fonction):
         def afficher(arg):
             try:

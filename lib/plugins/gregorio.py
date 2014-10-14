@@ -61,6 +61,7 @@ def afficher(parametres):
                 corps = '<object type="application/pdf" data="/public/data/pdf/{0}/{1}" zoom="page" width="100%" height="100%"></object>'.format(
                         '/'.join(sousdossier),fichierpdf
                         ),
+                actions = 'Télécharger ' + s.authentifie('Éditer')
                 )
 
 @s.page

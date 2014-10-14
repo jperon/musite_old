@@ -25,6 +25,10 @@ def page(fonction):
 def admin(contenu):
     return contenu
 
-@a.masquer(utilisateurs=a.utilisateurs())
+@a.seulement(utilisateurs=a.utilisateurs)
+def authentifie(contenu):
+    return contenu
+
+@a.exclure(utilisateurs=a.utilisateurs())
 def nonauthentifie(contenu):
     return contenu
