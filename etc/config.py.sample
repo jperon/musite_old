@@ -2,8 +2,6 @@ import os
 
 TITRE = 'Musite'
 
-PWD = os.path.abspath(os.getcwd())
-
 PLUGINS = (
     'gregorio',
     'lilypond',
@@ -17,3 +15,7 @@ SERVER_CONFIG={
 #    'server.ssl_private_key':'/etc/ssl/musite.pem',
     }
 
+PWD = os.path.abspath(os.getcwd())
+TMP = os.path.join(PWD,'tmp')
+DATA = os.path.join(PWD,'static','data')
+MODELES = os.path.join(PWD,'modeles')
