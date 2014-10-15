@@ -1,8 +1,11 @@
 import os,hashlib
+import random as r
 import cherrypy as cp
 import utilisateurs as u, groupes as g, jrnl as l
 
 PWD = os.path.abspath(os.getcwd())
+
+ticket = ''
 
 def crypter(mdp):
     '''Encodage des mots de passe.'''
@@ -20,21 +23,28 @@ def groupes():
 def authentifier(royaume,nom,mdp):
     try:
         if utilisateurs()[nom] == crypter(mdp):
-            critere = cp.session['reserve']
-            if 'utilisateur' in critere:
-                return (nom == critere['utilisateur'])
-            elif 'utilisateurs' in critere:
-                return (nom in critere['utilisateurs'])
-            elif 'groupe' in critere:
-                return (nom in groupes()[critere['groupe']])
+            return valider(nom)
+        else: return False
     except KeyError:
         return False
+
+def valider(nom):
+    if 'utilisateur' in passeport:
+        return (nom == passeport['utilisateur'])
+    elif 'utilisateurs' in passeport:
+        return (nom in passeport['utilisateurs'].keys())
+    elif 'groupe' in passeport:
+        return (nom in groupes()[passeport['groupe']])
 
 def reserver(**critere):
     def decorateur(fonction):
         def afficher(arg):
-            cp.session['reserve'] = critere
+            global passeport
+            passeport = critere
             if cp.lib.auth_basic.basic_auth('Droits insuffisants',authentifier) == None:
+                global ticket
+                cp.session['ticket'] = ticket = r.random()
+                cp.session['nom'] = cp.request.login
                 return fonction(arg)
             else:return '''Accès interdit'''
         return afficher
@@ -42,23 +52,26 @@ def reserver(**critere):
 
 def seulement(**critere):
     def decorateur(fonction):
-        def afficher(arg):
-            royaume = 'Droits insuffisants'
+        def afficher(*args):
+            global passeport
+            passeport = critere
             try:
-                if cp.lib.auth_basic.basic_auth(royaume,authentifier) == None:
-                    return fonction(arg)
+                if cp.session['ticket'] == ticket and valider(cp.session['nom']):
+                        return fonction(*args)
                 else: return ''
-            except cp.HTTPError: return ''
+            except KeyError: return ''
         return afficher
     return decorateur
 
 def exclure(**critere):
     def decorateur(fonction):
-        def afficher(arg):
+        def afficher(*args):
+            global passeport
+            passeport = critere
             try:
-                if cp.lib.auth_basic.basic_auth('Droits insuffisants',authentifier) == None:
-                    return ''
-                else: return fonction(arg)
-            except cp.HTTPError: return fonction(arg)
+                if cp.session['ticket'] == ticket and valider(cp.session['nom']):
+                        return ''
+                else: return fonction(*args)
+            except KeyError: return fonction(*args)
         return afficher
     return decorateur
