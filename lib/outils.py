@@ -25,7 +25,7 @@ def page(fonction):
 def admin(contenu):
     return contenu
 
-@a.seulement(utilisateurs=a.utilisateurs)
+@a.seulement(utilisateurs=a.utilisateurs())
 def authentifie(contenu):
     return contenu
 
