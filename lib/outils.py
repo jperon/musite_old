@@ -5,7 +5,7 @@ import config as c, auth as a
 def page(fonction):
     '''Décorateur définissant la bannière et le menu.'''
     def afficher(*arguments,**parametres):
-        with open(os.path.join('modeles','page.html')) as f: page = Template(f.read(-1))
+        with open(os.path.join(c.PWD,'modeles','page.html')) as f: page = Template(f.read(-1))
         index = ('<b>Pages</b><ul>\n'
             + '\n'.join(['<li plain=true><a href=/{0}/>{0}</a></li>'.format(plugin) for plugin in c.PLUGINS])
             + '\n</ul>'

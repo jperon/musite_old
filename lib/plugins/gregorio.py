@@ -61,7 +61,14 @@ def afficher(parametres):
                 corps = '<object type="application/pdf" data="/public/data/pdf/{0}/{1}" zoom="page" width="100%" height="100%"></object>'.format(
                         '/'.join(sousdossier),fichierpdf
                         ),
-                actions = 'Télécharger ' + s.authentifie('Éditer')
+                actions = (
+                    'Télécharger '
+                    + s.authentifie(
+                        '<a href=/gregorio/editer/?fichier={}>Éditer</a>'.format(
+                            parametres['fichier']
+                            )
+                        )
+                    )
                 )
 
 @s.page
@@ -71,7 +78,8 @@ def telecharger(parametres):pass
 @s.page
 def editer(parametres):
     if 'fichier' in parametres:
-        with open(os.path.join(c.DATA,EXT,parametres['fichier'])) as f:
+        anciennom = parametres['fichier']
+        with open(os.path.join(c.DATA,EXT,anciennom)) as f:
             texte = f.read(-1)
     else:
         with open(os.path.join(DOSSIER,'piece.gabc')) as f:
@@ -80,6 +88,7 @@ def editer(parametres):
         return Template(f.read(-1)).substitute(
                 nom = NOM,
                 texte = texte,
+                anciennom = anciennom if anciennom else '',
                 )
 
 def traiter(parametres):
@@ -100,24 +109,27 @@ def compiler(parametres,dossier,fichier):
     shutil.rmtree(destination,True)
     shutil.copytree(
         os.path.join('modeles',NOM),
-        destination
+        destination,
+        True
         )
-    os.chdir(destination)
-    with open(os.path.join('gabc',gabc),'w') as f:
-        f.write(contenu)
-    with open('Gabarit.tex','r') as g:
-        with open('partition.tex','w') as f:
-            f.write(
-                Template(g.read(-1)).substitute(
-                    papier = parametres['papier'],
-                    taillepolice = parametres['taillepolice'],
-                    marge = parametres['marge'],
+    try:
+        os.chdir(destination)
+        with open(os.path.join('gabc',gabc),'w') as f:
+            f.write(contenu)
+        with open('Gabarit.tex','r') as g:
+            with open('partition.tex','w') as f:
+                f.write(
+                    Template(g.read(-1)).substitute(
+                        papier = parametres['papier'],
+                        taillepolice = parametres['taillepolice'],
+                        marge = parametres['marge'],
+                        )
                     )
-                )
-    environnement = os.environ.copy()
-    environnement['TEXINPUTS'] = 'lib:'
-    sortie,erreurs = sp.Popen(commande,env=environnement,stdout=sp.PIPE,stderr=sp.PIPE).communicate()
-    os.chdir(c.PWD)
+        environnement = os.environ.copy()
+        environnement['TEXINPUTS'] = 'lib:'
+        sortie,erreurs = sp.Popen(commande,env=environnement,stdout=sp.PIPE,stderr=sp.PIPE).communicate()
+    finally:
+        os.chdir(c.PWD)
     os.renames(os.path.join(destination,'partition.pdf'),os.path.join(dossier,fichier))
 
 def enregistrer(parametres):
@@ -125,6 +137,12 @@ def enregistrer(parametres):
     dossier = os.path.join(c.DATA,EXT,gabc.entetes['office-part'])
     os.makedirs(dossier,exist_ok=True)
     fichier = gabc.entetes['name'].replace(' ','_').lower() + '.' + EXT
-    with open(os.path.join(dossier,fichier),'w') as f:
+    emplacement = os.path.join(dossier,fichier)
+    with open(emplacement,'w') as f:
         f.write(parametres['texte'])
+    try:
+        ancienemplacement = parametres['anciennom'].replace('/',os.sep)
+        if ancienemplacement != emplacement:
+            os.remove(ancienemplacement)
+    except KeyError: pass
     raise(cp.HTTPRedirect('/' + NOM))
