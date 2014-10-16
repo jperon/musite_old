@@ -3,6 +3,7 @@ from string import Template
 import config as c, auth as a
 
 def page(fonction):
+    '''Décorateur définissant la bannière et le menu.'''
     def afficher(*arguments,**parametres):
         with open(os.path.join('modeles','page.html')) as f: page = Template(f.read(-1))
         index = ('<b>Pages</b><ul>\n'

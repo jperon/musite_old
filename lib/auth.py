@@ -5,8 +5,6 @@ import utilisateurs as u, groupes as g, jrnl as l
 
 PWD = os.path.abspath(os.getcwd())
 
-ticket = ''
-
 def crypter(mdp):
     '''Encodage des mots de passe.'''
     mdp = mdp.encode('utf-8')
@@ -21,6 +19,7 @@ def groupes():
     return g.lister(os.path.join(PWD,'etc','groupes'))
 
 def authentifier(royaume,nom,mdp):
+    '''Vérification des identifiants.'''
     try:
         if utilisateurs()[nom] == crypter(mdp):
             return valider(nom)
@@ -29,6 +28,8 @@ def authentifier(royaume,nom,mdp):
         return False
 
 def valider(nom):
+    '''Validation de la correspondance à un nom ou de l'appartenance
+    à un groupe.'''
     if 'utilisateur' in passeport:
         return (nom == passeport['utilisateur'])
     elif 'utilisateurs' in passeport:
@@ -37,13 +38,14 @@ def valider(nom):
         return (nom in groupes()[passeport['groupe']])
 
 def reserver(**critere):
+    '''Décorateur s'assurant de l'authentification avant d'assurer
+    l'accès à une page.'''
     def decorateur(fonction):
         def afficher(arg):
             global passeport
             passeport = critere
             if cp.lib.auth_basic.basic_auth('Droits insuffisants',authentifier) == None:
-                global ticket
-                cp.session['ticket'] = ticket = r.random()
+                cp.session['identifié'] = True
                 cp.session['nom'] = cp.request.login
                 return fonction(arg)
             else:return '''Accès interdit'''
@@ -51,12 +53,16 @@ def reserver(**critere):
     return decorateur
 
 def seulement(**critere):
+    '''Décorateur permettant de réserver l'affichage de certains
+    éléments aux utilisateurs identifiés, selon certains critères.
+    N.B: cette fonction ne s'assure pas que l'identification soit
+    authentique : pour cela, utilisez reserver.'''
     def decorateur(fonction):
         def afficher(*args):
             global passeport
             passeport = critere
             try:
-                if cp.session['ticket'] == ticket and valider(cp.session['nom']):
+                if cp.session['identifié'] == True and valider(cp.session['nom']):
                         return fonction(*args)
                 else: return ''
             except KeyError: return ''
@@ -64,12 +70,16 @@ def seulement(**critere):
     return decorateur
 
 def exclure(**critere):
+    '''Décorateur permettant d'empêcher l'affichage de certains
+    éléments pour les utilisateurs identifiés, selon certains critères.
+    N.B: cette fonction ne s'assure pas que l'identification soit
+    authentique : pour cela, utilisez reserver.'''
     def decorateur(fonction):
         def afficher(*args):
             global passeport
             passeport = critere
             try:
-                if cp.session['ticket'] == ticket and valider(cp.session['nom']):
+                if cp.session['identifié'] == True and valider(cp.session['nom']):
                         return ''
                 else: return fonction(*args)
             except KeyError: return fonction(*args)
