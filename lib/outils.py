@@ -1,4 +1,5 @@
 import os
+import unicodedata as ud
 from string import Template
 import config as c, auth as a
 
@@ -33,3 +34,7 @@ def authentifie(contenu):
 @a.exclure(utilisateurs=a.utilisateurs())
 def nonauthentifie(contenu):
     return contenu
+
+def sansaccents(input_str):
+    nkfd_form = ud.normalize('NFKD', input_str)
+    return "".join([c for c in nkfd_form if not ud.combining(c)])

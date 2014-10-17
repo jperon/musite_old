@@ -54,6 +54,7 @@ Paroles = \\lyricmode {
 import os,sys,getopt
 import re
 from midiutil.MidiFile3 import MIDIFile
+import unicodedata as ud
 
 #### Méthodes globales #################################################
 
@@ -216,6 +217,10 @@ def verifier(alertes,texte):
             if alerte in texte:
                 print("!!! " + alerte + " !!!")
 
+def sansaccents(input_str):
+    nkfd_form = ud.normalize('NFKD', input_str)
+    return "".join([c for c in nkfd_form if not ud.combining(c)])
+
 
 #### Classes ###########################################################
 
@@ -281,7 +286,11 @@ class Gabc:
                 }
         try:
             if resultat['office-part'].lower() in categories.keys():
-                resultat['office-part'] = categories[resultat['office-part'].lower()]
+                resultat['office-part'] = (
+                    sansaccents(
+                        categories[resultat['office-part'].lower()]
+                        )
+                    )
             else: resultat['office-part'] = {'varia'}
         except KeyError:
             resultat['office-part'] = {'varia'}

@@ -136,8 +136,9 @@ def enregistrer(parametres):
     gabc = g.Gabc(parametres['texte'])
     dossier = os.path.join(c.DATA,EXT,gabc.entetes['office-part'])
     os.makedirs(dossier,exist_ok=True)
-    fichier = gabc.entetes['name'].replace(' ','_').lower() + '.' + EXT
+    fichier = s.sansaccents(gabc.entetes['name'].replace(' ','_').lower()) + '.' + EXT
     emplacement = os.path.join(dossier,fichier)
+    l.log(emplacement)
     with open(emplacement,'w') as f:
         f.write(parametres['texte'])
     try:
