@@ -55,6 +55,7 @@ import os,sys,getopt
 import re
 from midiutil.MidiFile3 import MIDIFile
 import unicodedata as ud
+import jrnl as l
 
 #### Méthodes globales #################################################
 
@@ -285,15 +286,12 @@ class Gabc:
                 'verse':'versus',
                 }
         try:
-            if resultat['office-part'].lower() in categories.keys():
-                resultat['office-part'] = (
-                    sansaccents(
-                        categories[resultat['office-part'].lower()]
-                        )
-                    )
-            else: resultat['office-part'] = {'varia'}
+            categorie = sansaccents(resultat['office-part'].lower())
+            if categorie in categories.keys():
+                resultat['office-part'] = categorie
+            else: resultat['office-part'] = 'varia'
         except KeyError:
-            resultat['office-part'] = {'varia'}
+            resultat['office-part'] = 'varia'
         return resultat
     @property
     def contenu(self):

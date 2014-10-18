@@ -1,5 +1,5 @@
-import os,shutil
-import subprocess as sp
+import os,sys,shutil
+import subprocess as sp, traceback as tb
 from string import Template
 import config as c, jrnl as l
 import outils as s, auth as a, gabctk as g
@@ -17,7 +17,7 @@ def retourner(*arguments,**parametres):
     l.log('arguments : {}\n paramètres : {}\n'.format(str(arguments),str(parametres)))
     try:
         return eval(arguments[0])(parametres)
-    except (KeyError,IndexError):
+    except (KeyError,IndexError) as e:
         return accueillir()
 
 def titregabc(f):
@@ -39,7 +39,7 @@ def accueillir():
                     os.path.join(dossier.replace(racine + os.sep,''),fichier),
                     titregabc(os.path.join(dossier,fichier))
                     )
-                for fichier in sorted(fichiers)),
+                for fichier in sorted(fichiers,key=lambda x: x.lower())),
             )
         for dossier, sousdossiers, fichiers in sorted(dossiers) if len(fichiers)]
         )
@@ -78,8 +78,8 @@ def telecharger(parametres):pass
 @s.page
 def editer(parametres):
     if 'fichier' in parametres:
-        anciennom = parametres['fichier']
-        with open(os.path.join(c.DATA,EXT,anciennom)) as f:
+        cp.session['anciennom'] = parametres['fichier']
+        with open(os.path.join(c.DATA,EXT,cp.session['anciennom'])) as f:
             texte = f.read(-1)
     else:
         with open(os.path.join(DOSSIER,'piece.gabc')) as f:
@@ -88,7 +88,6 @@ def editer(parametres):
         return Template(f.read(-1)).substitute(
                 nom = NOM,
                 texte = texte,
-                anciennom = anciennom if anciennom else '',
                 )
 
 def traiter(parametres):
@@ -138,12 +137,37 @@ def enregistrer(parametres):
     os.makedirs(dossier,exist_ok=True)
     fichier = s.sansaccents(gabc.entetes['name'].replace(' ','_').lower()) + '.' + EXT
     emplacement = os.path.join(dossier,fichier)
-    l.log(emplacement)
     with open(emplacement,'w') as f:
         f.write(parametres['texte'])
     try:
-        ancienemplacement = parametres['anciennom'].replace('/',os.sep)
+        ancienemplacement = os.path.join(
+                    c.DATA,EXT,
+                    cp.session['anciennom'].replace('/',os.sep),
+                    )
         if ancienemplacement != emplacement:
             os.remove(ancienemplacement)
+        try: os.remove(
+                    ancienemplacement.replace(
+                        '.' + EXT,'.pdf'
+                        ).replace(
+                        '/' + EXT,'/pdf'
+                        )
+                    )
+        except FileNotFoundError: pass
     except KeyError: pass
-    raise(cp.HTTPRedirect('/' + NOM))
+    try:
+        os.remove(emplacement.replace(
+                        '.' + EXT,'.pdf'
+                        ).replace(
+                        '/' + EXT,'/pdf'
+                        )
+                    )
+    except Exception as e:
+        l.log(e)
+        tb.format_exc()
+    raise(cp.HTTPRedirect(
+        '/{nom}/afficher/?fichier={fichier}'.format(
+            nom = NOM,
+            fichier = '/'.join((gabc.entetes['office-part'],fichier))
+            )
+        ))
