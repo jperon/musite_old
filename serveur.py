@@ -55,7 +55,21 @@ class Admin():
     @s.page
     @a.reserver(utilisateur='admin')
     def utilisateurs(self):
-        return '<br>'.join([u for u in a.utilisateurs().keys()])
+        return '''<b>Utilisateurs :</b>
+<ul>{utilisateurs}</ul>
+<br>
+<b>Groupes :</b>\n<ul>{groupes}</ul>'''.format(
+            utilisateurs='\n'.join(
+                ['<li>{}</li>'.format(u)\
+                        for u in a.utilisateurs().keys()]
+                )
+            ,
+            groupes='\n'.join(
+                ['<li>{}</li>'.format(u)\
+                        for u in a.groupes()]
+                )
+            )
+            
 
 if __name__ == '__main__':
     site_config = {
