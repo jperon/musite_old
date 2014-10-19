@@ -4,7 +4,7 @@ from string import Template
 sys.path.insert(0, './etc')
 sys.path.insert(0, './lib')
 sys.path.insert(0, './lib/plugins')
-import cherrypy as cp
+import html,cherrypy as cp
 import config as c
 import auth as a, outils as s,utilisateurs as u
 
@@ -55,7 +55,7 @@ class Admin():
     @s.page
     @a.reserver(groupe='admin')
     def utilisateurs(self,**parametres):
-        utilisateurs = '''<b>Utilisateurs :</b>\n<table>{liste}</table>
+        utilisateurs = '''<div id="utiliateurs"><b>Utilisateurs :</b>\n<table>{liste}</table>
             <br>
             <form method="post" action="/admin/creerutilisateur/">
                 <input name="nom" placeholder="Nom"></input>
@@ -67,7 +67,7 @@ class Admin():
                 {texte}
                 <br>
                 <button type="submit">Créer / modifier</button>
-            </form>
+            </form></div>
             '''.format(
                 liste = '\n'.join(
                 ['<tr><td>{0}&nbsp&nbsp&nbsp</td><td><small><a href=/admin/supprimerutilisateur/?nom={0}>supprimer</a></small></td></tr>'.format(u)\
@@ -77,10 +77,11 @@ class Admin():
             )
         with open(os.path.join('etc','groupes'),'r') as f:
             groupes = '''
+            <div id="groupes">
             <script language="javascript" type="text/javascript" src="/public/js/edit_area/edit_area_full.js"></script>
             <script language="javascript" type="text/javascript">
                 editAreaLoader.init({{
-                    id : "groupes"
+                    id : "fichier"
                     ,language: "fr"
                     ,word_wrap:false
                     ,show_line_colors:false
@@ -89,17 +90,18 @@ class Admin():
             </script>
             <b>Groupes :</b>\n<br><br>\n
             <form method="post" action="/admin/enregistrergroupes/">
-                <textarea name="texte" id="groupes" cols="40" rows="10">{}</textarea>
+                <textarea name="texte" id="fichier" cols="40" rows="10">{}</textarea>
                 <br>
                 <button type="submit">Enregistrer</button>
             </form>
+            </div>
             '''.format(f.read(-1))
         return '{}<br>{}'.format(utilisateurs,groupes)
     @cp.expose
     @a.reserver(groupe='admin')
     def creerutilisateur(self,nom,mdp,mdp_v):
         if mdp == mdp_v:
-            utilisateur = u.Utilisateur(nom,mdp)
+            utilisateur = u.Utilisateur(html.escape(nom),html.escape(mdp))
             try:
                 utilisateur.ajouter(os.path.join('etc','utilisateurs'))
             except u.UtilisateurExistant:
@@ -111,12 +113,12 @@ class Admin():
     @a.reserver(groupe='admin')
     def enregistrergroupes(self,texte):
         with open(os.path.join('etc','groupes'),'w') as f:
-            f.write(texte)
+            f.write(html.escape(texte))
         raise(cp.HTTPRedirect('/admin/utilisateurs/'))
     @cp.expose
     @a.reserver(groupe='admin')
     def supprimerutilisateur(self,nom):
-        u.Utilisateur(nom).supprimer(os.path.join('etc','utilisateurs'))
+        u.Utilisateur(html.escape(nom)).supprimer(os.path.join('etc','utilisateurs'))
         raise(cp.HTTPRedirect('/admin/utilisateurs/'))
 
 if __name__ == '__main__':

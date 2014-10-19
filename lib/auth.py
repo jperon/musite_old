@@ -1,7 +1,7 @@
 import os,hashlib
 import random as r
 import cherrypy as cp
-import utilisateurs as u, groupes as g, jrnl as l
+import utilisateurs as u, jrnl as l
 
 PWD = os.path.abspath(os.getcwd())
 
@@ -16,7 +16,7 @@ def utilisateurs():
 
 def groupes():
     '''Liste des groupes.'''
-    return g.lister(os.path.join(PWD,'etc','groupes'))
+    return u.listergroupes(os.path.join(PWD,'etc','groupes'))
 
 def authentifier(royaume,nom,mdp):
     '''Vérification des identifiants.'''

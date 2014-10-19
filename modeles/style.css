@@ -74,16 +74,21 @@ margin-left:100px;
 margin-right:auto;
 }
 
-/*
-textarea {
-width: 100%;
-height: 85%;
-font-family: monospace;
-font-size: 75%;
-background-color: #BBAE98;
-color: black;
+#utilisateurs {
+position:absolute;
+top:0px;
+bottom:0px;
+left:0px;
+right:51%;
 }
-*/
+
+#groupes {
+position:absolute;
+top:0px;
+bottom:0px;
+right:0px;
+left:51%;
+}
 
 A:link { text-decoration: none; color: #303030 }
 A:visited { text-decoration: none; color: #303030 }
@@ -129,9 +134,8 @@ margin-left:1ex;
 padding-left:0;
 }
 
-pre {
-font-family: LinLibertineO;
-tab-size: 15;
+table {
+font-size: 100%;
 }
 
 $plugin
