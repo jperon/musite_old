@@ -41,13 +41,13 @@ def reserver(**critere):
     '''Décorateur s'assurant de l'authentification avant d'assurer
     l'accès à une page.'''
     def decorateur(fonction):
-        def afficher(arg):
+        def afficher(*arg,**parms):
             global passeport
             passeport = critere
             if cp.lib.auth_basic.basic_auth('Droits insuffisants',authentifier) == None:
                 cp.session['identifié'] = True
                 cp.session['nom'] = cp.request.login
-                return fonction(arg)
+                return fonction(*arg,**parms)
             else:return '''Accès interdit'''
         return afficher
     return decorateur

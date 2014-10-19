@@ -6,7 +6,7 @@ sys.path.insert(0, './lib')
 sys.path.insert(0, './lib/plugins')
 import cherrypy as cp
 import config as c
-import auth as a, outils as s
+import auth as a, outils as s,utilisateurs as u
 
 PLUGINS = {}
 for m in c.PLUGINS: PLUGINS[m] = __import__(m)
@@ -55,33 +55,54 @@ class Admin():
     @s.page
     @a.reserver(utilisateur='admin')
     def utilisateurs(self):
-        utilisateurs = '<b>Utilisateurs :</b>\n<ul>{}</ul>'.format(
-                '\n'.join(
-                ['<li>{}</li>'.format(u)\
+        utilisateurs = '''<b>Utilisateurs :</b>\n<ul>{liste}</ul>
+            <form method="post" action="creerutilisateur/">
+                <input name="nom" placeholder="Nom"></input>
+                <input name="mdp" placeholder="MdP"></input>
+                <br>
+                <button type="submit">Créer</button>
+            </form>
+            '''.format(
+                liste = '\n'.join(
+                ['<li>{0}\t <a href=supprimerutilisateur/?nom={0}>supprimer</a></li>'.format(u)\
                         for u in a.utilisateurs().keys()]
                 )
             )
-        #~ groupes = '<b>Groupes :</b>\n<ul>{}</ul>'.format(
-                #~ '\n'.join(
-                #~ ['<li>{}</li>'.format(u)\
-                        #~ for u in a.groupes()]
-                #~ )
-            #~ )
         with open(os.path.join('etc','groupes'),'r') as f:
-            groupes = '''<b>Groupes :</b>\n<br><br>\n
-            <form method="post" action="/admin/modifiergroupes/">
-                <textarea name="texte" id="saisie" cols="80" rows="10">{}</textarea>
+            groupes = '''
+            <script language="javascript" type="text/javascript" src="/public/js/edit_area/edit_area_full.js"></script>
+            <script language="javascript" type="text/javascript">
+                editAreaLoader.init({{
+                    id : "groupes"
+                    ,language: "fr"
+                    ,word_wrap:false
+                    ,show_line_colors:false
+                    ,start_highlight: false
+                }});
+            </script>
+            <b>Groupes :</b>\n<br><br>\n
+            <form method="post" action="enregistrergroupes/">
+                <textarea name="texte" id="groupes" cols="40" rows="10">{}</textarea>
+                <br>
                 <button type="submit">Enregistrer</button>
             </form>
             '''.format(f.read(-1))
         return '{}<br>{}'.format(utilisateurs,groupes)
     @cp.expose
     @a.reserver(utilisateur='admin')
-    def modifiergroupes(self,texte):
+    def creerutilisateur(self,nom,mdp):
+        pass
+    @cp.expose
+    @a.reserver(utilisateur='admin')
+    def enregistrergroupes(self,texte):
         with open(os.path.join('etc','groupes'),'w') as f:
             f.write(texte)
-            raise(cp.HTTPRedirect('/admin'))
-            
+        raise(cp.HTTPRedirect('/admin/'))
+    @cp.expose
+    @a.reserver(utilisateur='admin')
+    def supprimerutilisateur(self,nom):
+        u.Utilisateur(nom).supprimer(os.path.join('etc','utilisateurs'))
+        raise(cp.HTTPRedirect('/admin/'))
 
 if __name__ == '__main__':
     site_config = {

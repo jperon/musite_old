@@ -13,13 +13,14 @@ def lister(fichier):
             }
 
 class Utilisateur:
-    def __init__(self,nom,mdp):
+    def __init__(self,nom,mdp=''):
         self.nom = nom
         self.mdp = encoder(mdp)
     def ajouter(self,fichier):
+        if self.mdp == '': raise MotDePasseRequis
         if self.nom not in lister(fichier).keys():
             with open(fichier,'a') as f:
-                f.write('{0}\t{1}\n'.format(self.nom,encoder(self.mdp)))
+                f.write('{0}\t{1}\n'.format(self.nom,self.mdp))
         else: raise UtilisateurExistant(self.nom)
     def supprimer(self,fichier):
         utilisateurs = lister(fichier)
@@ -30,6 +31,7 @@ class Utilisateur:
                     f.write('{0}\t{1}\n'.format(nom,utilisateurs[nom]))
         except KeyError:pass
     def modifier(self,fichier):
+        if self.mdp == '': raise MotDePasseRequis
         utilisateurs = lister(fichier)
         utilisateurs[self.nom] = self.mdp
         with open(fichier,'w') as f:
@@ -41,6 +43,9 @@ class Utilisateur:
         return self.__str__()
 
 class UtilisateurExistant(Exception):
+    pass
+
+class MotDePasseRequis(Exception):
     pass
 
 if __name__ == '__main__':
