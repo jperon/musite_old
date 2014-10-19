@@ -53,20 +53,27 @@ class Admin():
         return 'Bonjour, {0} !'.format(cp.request.login)
     @cp.expose
     @s.page
-    @a.reserver(utilisateur='admin')
-    def utilisateurs(self):
-        utilisateurs = '''<b>Utilisateurs :</b>\n<ul>{liste}</ul>
-            <form method="post" action="creerutilisateur/">
+    @a.reserver(groupe='admin')
+    def utilisateurs(self,**parametres):
+        utilisateurs = '''<b>Utilisateurs :</b>\n<table>{liste}</table>
+            <br>
+            <form method="post" action="/admin/creerutilisateur/">
                 <input name="nom" placeholder="Nom"></input>
-                <input name="mdp" placeholder="MdP"></input>
                 <br>
-                <button type="submit">Créer</button>
+                <input name="mdp" type="password" placeholder="MdP"></input>
+                <br>
+                <input name="mdp_v" type="password" placeholder="MdP (de nouveau)"></input>
+                <br>
+                {texte}
+                <br>
+                <button type="submit">Créer / modifier</button>
             </form>
             '''.format(
                 liste = '\n'.join(
-                ['<li>{0}\t <a href=supprimerutilisateur/?nom={0}>supprimer</a></li>'.format(u)\
-                        for u in a.utilisateurs().keys()]
-                )
+                ['<tr><td>{0}&nbsp&nbsp&nbsp</td><td><small><a href=/admin/supprimerutilisateur/?nom={0}>supprimer</a></small></td></tr>'.format(u)\
+                        for u in sorted(a.utilisateurs().keys())]
+                ),
+                texte = parametres['texte'] if 'texte' in parametres else ''
             )
         with open(os.path.join('etc','groupes'),'r') as f:
             groupes = '''
@@ -81,7 +88,7 @@ class Admin():
                 }});
             </script>
             <b>Groupes :</b>\n<br><br>\n
-            <form method="post" action="enregistrergroupes/">
+            <form method="post" action="/admin/enregistrergroupes/">
                 <textarea name="texte" id="groupes" cols="40" rows="10">{}</textarea>
                 <br>
                 <button type="submit">Enregistrer</button>
@@ -89,20 +96,28 @@ class Admin():
             '''.format(f.read(-1))
         return '{}<br>{}'.format(utilisateurs,groupes)
     @cp.expose
-    @a.reserver(utilisateur='admin')
-    def creerutilisateur(self,nom,mdp):
-        pass
+    @a.reserver(groupe='admin')
+    def creerutilisateur(self,nom,mdp,mdp_v):
+        if mdp == mdp_v:
+            utilisateur = u.Utilisateur(nom,mdp)
+            try:
+                utilisateur.ajouter(os.path.join('etc','utilisateurs'))
+            except u.UtilisateurExistant:
+                utilisateur.modifier(os.path.join('etc','utilisateurs'))
+            raise(cp.HTTPRedirect('/admin/utilisateurs/'))
+        else:
+            return(self.utilisateurs(texte = 'Les mots de passe ne correspondent pas.'))
     @cp.expose
-    @a.reserver(utilisateur='admin')
+    @a.reserver(groupe='admin')
     def enregistrergroupes(self,texte):
         with open(os.path.join('etc','groupes'),'w') as f:
             f.write(texte)
-        raise(cp.HTTPRedirect('/admin/'))
+        raise(cp.HTTPRedirect('/admin/utilisateurs/'))
     @cp.expose
-    @a.reserver(utilisateur='admin')
+    @a.reserver(groupe='admin')
     def supprimerutilisateur(self,nom):
         u.Utilisateur(nom).supprimer(os.path.join('etc','utilisateurs'))
-        raise(cp.HTTPRedirect('/admin/'))
+        raise(cp.HTTPRedirect('/admin/utilisateurs/'))
 
 if __name__ == '__main__':
     site_config = {
