@@ -55,20 +55,32 @@ class Admin():
     @s.page
     @a.reserver(utilisateur='admin')
     def utilisateurs(self):
-        return '''<b>Utilisateurs :</b>
-<ul>{utilisateurs}</ul>
-<br>
-<b>Groupes :</b>\n<ul>{groupes}</ul>'''.format(
-            utilisateurs='\n'.join(
+        utilisateurs = '<b>Utilisateurs :</b>\n<ul>{}</ul>'.format(
+                '\n'.join(
                 ['<li>{}</li>'.format(u)\
                         for u in a.utilisateurs().keys()]
                 )
-            ,
-            groupes='\n'.join(
-                ['<li>{}</li>'.format(u)\
-                        for u in a.groupes()]
-                )
             )
+        #~ groupes = '<b>Groupes :</b>\n<ul>{}</ul>'.format(
+                #~ '\n'.join(
+                #~ ['<li>{}</li>'.format(u)\
+                        #~ for u in a.groupes()]
+                #~ )
+            #~ )
+        with open(os.path.join('etc','groupes'),'r') as f:
+            groupes = '''<b>Groupes :</b>\n<br><br>\n
+            <form method="post" action="/admin/modifiergroupes/">
+                <textarea name="texte" id="saisie" cols="80" rows="10">{}</textarea>
+                <button type="submit">Enregistrer</button>
+            </form>
+            '''.format(f.read(-1))
+        return '{}<br>{}'.format(utilisateurs,groupes)
+    @cp.expose
+    @a.reserver(utilisateur='admin')
+    def modifiergroupes(self,texte):
+        with open(os.path.join('etc','groupes'),'w') as f:
+            f.write(texte)
+            raise(cp.HTTPRedirect('/admin'))
             
 
 if __name__ == '__main__':
