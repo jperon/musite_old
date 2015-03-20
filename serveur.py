@@ -132,27 +132,15 @@ class Admin():
 
 
 if __name__ == '__main__':
-    SITE_CONFIG = {
-        '/': {
-            'tools.sessions.on': True,
-            'tools.staticdir.root': c.PWD
-            },
-        '/public': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': './public'
-            },
-        }
-
     SITE = Site()
-    for m in PLUGINS.keys():
-        SITE_CONFIG[m] = {'tools.sessions.on': True}
+    for m in c.PLUGINS:
         setattr(SITE, m, presenter(PLUGINS[m].retourner, m))
     setattr(SITE, 'admin', Admin())
 
     @s.page
-    def erreur_401(*args):
+    def erreur_401(**args):
         '''Si un utilisateur cherche à atteindre une page réservée.'''
         return 'Accès réservé'
     cp.config.update({'error_page.401': erreur_401})
     cp.config.update(c.SERVER_CONFIG)
-    cp.quickstart(SITE, '/', SITE_CONFIG)
+    cp.quickstart(SITE, '/', c.SITE_CONFIG)

@@ -152,7 +152,7 @@ def editer(parametres):
             os.path.join(
                 c.DATA, EXT, cp.session['anciennom']
                 )
-            ) as fichier:
+        ) as fichier:
             texte = fichier.read(-1)
     else:
         with open(os.path.join(DOSSIER, 'piece.gabc')) as fichier:
@@ -191,7 +191,7 @@ def compiler(parametres, dossier, fichierpdf):
             os.path.join(
                 c.DATA, 'gabc', parametres['fichier']
                 )
-            ) as fichier:
+        ) as fichier:
             contenu = fichier.read(-1)
     if 'papier' not in parametres:
         parametres['papier'] = 'a5paper'
@@ -258,7 +258,7 @@ def telecharger(parametres):
         )
     dossier = os.path.join(c.DATA, 'pdf', gabc.entetes['office-part'])
     compiler(parametres, dossier, fichierpdf)
-    return cp.lib.static.serve_file(os.path.join(dossier,fichierpdf))
+    return cp.lib.static.serve_file(os.path.join(dossier, fichierpdf))
 
 
 @a.reserver(utilisateurs=a.utilisateurs())
