@@ -31,8 +31,9 @@ def presenter(retourner, plugin):
 
 
 class Site:
-    '''Cœur du site : chaque méthode décorée par cherrypy.expose
-    correspond à une page du site.'''
+    '''Cœur du site : chaque méthode décorée par cp.expose
+    est accessible depuis un navigateur ; si elle est décorée par
+    s.page, c'est une page.'''
     @cp.expose
     @s.page
     def index(self):
@@ -44,8 +45,8 @@ class Site:
     @s.page
     @a.reserver(utilisateurs=a.utilisateurs())
     def authentification(self):
-        '''Page sans grand intérêt, si ce n'est de forcer l'authentification
-        des utilisateurs.'''
+        '''Page sans grand intérêt, si ce n'est de forcer
+        l'authentification des utilisateurs.'''
         return 'Bonjour, {0} !'.format(cp.request.login)
 
     @cp.expose
@@ -74,61 +75,27 @@ class Admin():
     @a.reserver(groupe='admin')
     def utilisateurs(self, **parametres):
         '''Page de gestion des utilisateurs.'''
-        utilisateurs = (
-            '<div id="utilisateurs"><b>Utilisateurs :</b>\n'
-            + '<table>{liste}</table>\n'
-            + '<br>\n'
-            + '<form method="post" action="/admin/creerutilisateur/">\n'
-            + ' <input name="nom" placeholder="Nom"></input>\n'
-            + ' <br>\n'
-            + ' <input name="mdp" type="password" placeholder="MdP"></input>\n'
-            + ' <br>\n'
-            + ' <input name="mdp_v" type="password" '
-            + 'placeholder="MdP (de nouveau)"></input>\n'
-            + '   <br>\n'
-            + '   {texte}\n'
-            + '   <br>\n'
-            + '   <button type="submit">Créer / modifier</button>\n'
-            + '</form></div>'
-            )\
-            .format(
-                liste='\n'.join(
-                    [
-                        (
-                            '<tr><td>{0}&nbsp&nbsp&nbsp</td><td><small>'
-                            + '<a href=/admin/supprimerutilisateur/?nom={0}>'
-                            + 'supprimer</a>'
-                            + '</small></td></tr>'
-                        ).format(u) for u in sorted(a.utilisateurs().keys())
-                    ]
-                    ),
-                texte=parametres['texte'] if 'texte' in parametres else ''
+        with \
+                open(os.path.join('lib', 'utilisateurs.html')) as fichier,\
+                open(os.path.join('etc', 'groupes'), 'r') as grfichier:
+            utilisateurs = Template(fichier.read(-1)).substitute(
+                liste='\n'.join([
+                    (
+                        '<tr><td>'
+                        + '{0}'
+                        + '&nbsp&nbsp&nbsp'
+                        + '</td><td><small>'
+                        + '<a href=/admin/supprimerutilisateur/?nom={0}>'
+                        + 'supprimer'
+                        + '</a>'
+                        + '</small></td></tr>'
+                    ).format(u) for u in sorted(a.utilisateurs().keys())
+                    ]),
+                texte=parametres['texte']
+                if 'texte' in parametres else '',
+                groupes=grfichier.read(-1)
                 )
-        with open(os.path.join('etc', 'groupes'), 'r') as fichier:
-            groupes = (
-                '<div id="groupes">'
-                + '<script language="javascript" type="text/javascript" '
-                + 'src="/public/js/edit_area/edit_area_full.js"></script>'
-                + '<script language="javascript" type="text/javascript">'
-                + '   editAreaLoader.init({{'
-                + '       id : "fichier"'
-                + '       , language: "fr"'
-                + '       , word_wrap:false'
-                + '       , show_line_colors:false'
-                + '       , start_highlight: false'
-                + '   }});'
-                + '</script>'
-                + '<b>Groupes :</b>\n<br><br>\n'
-                + '<form method="post" action="/admin/enregistrergroupes/">'
-                + '   <textarea name="texte" id="fichier" cols="40" rows="10">'
-                + '{}'
-                + '</textarea>'
-                + '   <br>'
-                + '   <button type="submit">Enregistrer</button>'
-                + '</form>'
-                + '</div>'
-            ).format(fichier.read(-1))
-        return '{}<br>{}'.format(utilisateurs, groupes)
+        return utilisateurs
 
     @cp.expose
     @a.reserver(groupe='admin')
