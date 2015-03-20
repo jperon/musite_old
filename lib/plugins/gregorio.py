@@ -34,7 +34,7 @@ def retourner(*arguments, **parametres):
             )
         )
     try:
-        return ast.literal_eval(arguments[0])(parametres)
+        return eval(arguments[0])(parametres)
     except (KeyError, IndexError):
         return accueillir()
 
@@ -100,9 +100,9 @@ def accueillir():
 @s.page
 def afficher(parametres):
     '''Aperçu d'une partition, avec en parallèle le Liber Usualis.'''
-    fichier = parametres['fichier'].split('/')
-    sousdossier = fichier[:-1]
-    fichierpdf = fichier[-1].replace('.gabc', '.pdf')
+    chemin = parametres['fichier'].split('/')
+    sousdossier = chemin[:-1]
+    fichierpdf = chemin[-1].replace('.gabc', '.pdf')
     dossier = os.path.join(c.DATA, 'pdf', os.sep.join(sousdossier))
     if not os.path.isfile(os.path.join(dossier, fichierpdf)):
         parametres['papier'] = 'a6paper'
@@ -112,7 +112,7 @@ def afficher(parametres):
     with open(os.path.join(DOSSIER, 'apercu.html')) as fichier:
         return Template(fichier.read(-1)).substitute(
             titre=titregabc(
-                os.path.join(c.DATA, 'gabc', os.sep.join(fichier))
+                os.path.join(c.DATA, 'gabc', os.sep.join(chemin))
                 ),
             corps=(
                 '<object type="application/pdf" '
@@ -179,10 +179,10 @@ def editer(parametres):
 def traiter(parametres):
     '''Distinction entre la simple mise en page et l'enregistrement
     d'une partition.'''
-    return ast.literal_eval(parametres['action'])(parametres)
+    return eval(parametres['action'])(parametres)
 
 
-def compiler(parametres, dossier, fichier):
+def compiler(parametres, dossier, fichierpdf):
     '''Compilation d'une partition.'''
     if 'texte' in parametres.keys():
         contenu = parametres['texte']
@@ -243,7 +243,7 @@ def compiler(parametres, dossier, fichier):
         os.chdir(c.PWD)
     os.renames(
         os.path.join(destination, 'partition.pdf'),
-        os.path.join(dossier, fichier)
+        os.path.join(dossier, fichierpdf)
         )
 
 
@@ -258,12 +258,7 @@ def telecharger(parametres):
         )
     dossier = os.path.join(c.DATA, 'pdf', gabc.entetes['office-part'])
     compiler(parametres, dossier, fichierpdf)
-    return (
-        '<object type="application/pdf" '
-        + 'data="/public/data/pdf/{0}/{1}" '
-        + 'zoom="page" width="100%" height="100%">'
-        + '</object>'
-        ).format(gabc.entetes['office-part'], fichierpdf)
+    return cp.lib.static.serve_file(os.path.join(dossier,fichierpdf))
 
 
 @a.reserver(utilisateurs=a.utilisateurs())
@@ -272,14 +267,14 @@ def enregistrer(parametres):
     gabc = g.Gabc(parametres['texte'])
     dossier = os.path.join(c.DATA, EXT, gabc.entetes['office-part'])
     os.makedirs(dossier, exist_ok=True)
-    fichier = (
+    fichiergabc = (
         s.sansaccents(
             gabc.entetes['name'].replace(' ', '_').lower()
             )
         + '.'
         + EXT
         )
-    emplacement = os.path.join(dossier, fichier)
+    emplacement = os.path.join(dossier, fichiergabc)
     with open(emplacement, 'w') as fichier:
         fichier.write(parametres['texte'])
     try:
@@ -315,6 +310,6 @@ def enregistrer(parametres):
     raise cp.HTTPRedirect(
         '/{nom}/afficher/?fichier={fichier}'.format(
             nom=NOM,
-            fichier='/'.join((gabc.entetes['office-part'], fichier))
+            fichier='/'.join((gabc.entetes['office-part'], fichiergabc))
             )
         )
